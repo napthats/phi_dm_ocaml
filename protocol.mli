@@ -1,0 +1,12 @@
+type raw_client_protocol =
+    Raw_message of string
+
+type sharp_client_protocol =
+    Open of string
+  | Unknown
+
+type client_protocol =
+    Raw_client_protocol of raw_client_protocol
+  | Sharp_client_protocol of sharp_client_protocol
+
+val decode_client_protocol : string -> client_protocol

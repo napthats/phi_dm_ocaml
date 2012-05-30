@@ -6,8 +6,5 @@ let rec main_loop event_list =
   main_loop event_list
 ;;
 
-let main = main_loop []
-;;
-
-let _ = main
+let _ = main_loop []
 ;;
