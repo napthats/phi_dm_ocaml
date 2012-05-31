@@ -56,36 +56,65 @@ let set_chara_position ~chara_id ~pos =
   Hashtbl.replace charaid_pos_tbl chara_id pos
 ;;
 
-let turn_absolute_direction = function
-    (adir, Forth) -> adir
-  | (North, Right) -> East
-  | (North, Left) -> West
-  | (North, Back) -> South
-  | (East, Right) -> South
-  | (East, Left) -> North
-  | (East, Back) -> West
-  | (West, Right) -> North
-  | (West, Left) -> South
-  | (West, Back) -> East
-  | (South, Right) -> West
-  | (South, Left) -> East
-  | (South, Back) -> North
+let turn_absolute_direction ~adir ~rdir =
+  match (adir, rdir) with
+      (adir, Forth) -> adir
+    | (North, Right) -> East
+    | (North, Left) -> West
+    | (North, Back) -> South
+    | (East, Right) -> South
+    | (East, Left) -> North
+    | (East, Back) -> West
+    | (West, Right) -> North
+    | (West, Left) -> South
+    | (West, Back) -> East
+    | (South, Right) -> West
+    | (South, Left) -> East
+    | (South, Back) -> North
 ;;
 
-let set_chara_direction ~chara_id ~dir =
-  match dir with
-      Absolute_direction adir ->
-        Hashtbl.replace charaid_dir_tbl chara_id adir
-    | Relative_direction rdir ->
-        let base_adir = Hashtbl.find charaid_dir_tbl chara_id in
-        Hashtbl.replace charaid_dir_tbl chara_id (turn_absolute_direction (base_adir, rdir))
+let set_chara_direction ~chara_id ~adir =
+  Hashtbl.replace charaid_dir_tbl chara_id adir
+;;
+
+let adir_to_offset = function
+    North -> (0, -1)
+  | East -> (1, 0)
+  | West -> (-1, 0)
+  | South -> (0, 1)
+;;
+
+let is_position_valid pos =
+  pos.px >= 0 && pos.px < phi_map_width && pos.py >= 0 && pos.py < phi_map_height
+;;
+
+let get_neighbor_position ~pos ~adir =
+  let offset = adir_to_offset adir in
+  let new_pos = {px = pos.px + (fst offset); py = pos.py + (snd offset)} in
+  if is_position_valid new_pos
+  then Some new_pos
+  else None
+;;
+
+let get_chara_position ~chara_id =
+  match Hashtbl.find_all charaid_pos_tbl chara_id with
+      [] -> assert false
+    | [pos] -> pos
+    | _ -> assert false
+;;
+
+let get_chara_absolute_direction ~chara_id =
+  match Hashtbl.find_all charaid_dir_tbl chara_id with
+      [] -> assert false
+    | [dir] -> dir
+    | _ -> assert false
 ;;
 
 
 let get_chip_with_outer pos =
-  if (pos.px < 0 || pos.px >= phi_map_width || pos.py < 0 || pos.py >= phi_map_height)
-  then chip_outer
-  else phi_map.(pos.py).(pos.px)
+  if is_position_valid pos
+  then phi_map.(pos.py).(pos.px)
+  else chip_outer
 ;;
 
 let sight_offset_for_client_north =

@@ -5,8 +5,11 @@ type sight_change_type =
   | Move_chara of (chara * (Phi_map.view_position * Phi_map.view_position))
   | Disappear_chara of (chara * Phi_map.view_position)
 and
+
 chara = 
-    <get_position : Phi_map.position;
-     get_name : string;
-     sight_change : sight_change_type -> Event.event list>
+    <get_name : string;
+     sight_change : sight_change_type -> Event.event list;
+     turn : dir:Phi_map.direction -> Event.event list;
+     go : dir:Phi_map.direction -> Event.event list;
+     mapview_update : unit>
 ;;

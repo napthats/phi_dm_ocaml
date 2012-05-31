@@ -1,14 +1,10 @@
 let create ~phirc ~cid ~chid : Chara.chara = 
-  let pos = Phi_map.get_default_position in
-  let dir = Phi_map.North in (* tentative *)
   let chara = object (self)
     val cid = cid
     val phirc = phirc
     val chid = chid
-    val pos = pos
 
     method get_name = phirc
-    method get_position = pos
     method sight_change = function
         Chara.Appear_chara (chara, vpos) ->
           self#send_message
@@ -31,11 +27,43 @@ let create ~phirc ~cid ~chid : Chara.chara =
               " on "; string_of_int vpos.Phi_map.x; ":"; string_of_int vpos.Phi_map.y]);
         []
 
+    method turn ~dir =
+      let adir =
+        (match dir with
+            Phi_map.Absolute_direction adir -> adir
+          | Phi_map.Relative_direction rdir ->
+            let adir =Phi_map.get_chara_absolute_direction ~chara_id:chid in
+            Phi_map.turn_absolute_direction ~adir ~rdir
+        )
+      in
+      Phi_map.set_chara_direction ~chara_id:chid ~adir;
+      self#mapview_update;
+      []
+
+    method go ~dir =
+      let adir =
+        match dir with
+            Phi_map.Absolute_direction adir -> adir
+          | Phi_map.Relative_direction rdir ->
+            let adir =Phi_map.get_chara_absolute_direction ~chara_id:chid in
+            Phi_map.turn_absolute_direction ~adir ~rdir
+      in
+      let pos = Phi_map.get_chara_position ~chara_id:chid in
+      match Phi_map.get_neighbor_position ~pos ~adir with
+          None -> []
+        | Some next_pos ->
+          Phi_map.set_chara_position ~chara_id:chid ~pos:next_pos;
+          self#mapview_update;
+          []
+
     method private send_message msg = Client_manager.send_message ~cid ~msg
-    method private mapview_update =
+    method mapview_update =
       self#send_message (Protocol.encode_server_protocol (Protocol.M57Map (Phi_map.get_mapview ~chara_id:chid)))
   end in
+  let pos = Phi_map.get_default_position in (* tentative *)
+  let adir = Phi_map.North in (* tentative *)
   Phi_map.set_chara_position ~chara_id:chid ~pos;
-  Phi_map.set_chara_direction ~chara_id:chid ~dir:(Phi_map.Absolute_direction dir);
+  Phi_map.set_chara_direction ~chara_id:chid ~adir;
+  chara#mapview_update;
   chara
 ;;

@@ -11,26 +11,31 @@ let execute_event = function
 (* tentative *)
     Client_manager.send_message ~cid ~msg;
     []
-  | (Event.Client_message (_, Protocol.Raw_client_protocol (Protocol.Go _))) ->
-    [] (* tentative *)
+  | (Event.Client_message (cid, Protocol.Raw_client_protocol (Protocol.Go dir))) ->
+    (match Hashtbl.find_all client_table cid with
+        [chara_id] ->
+          let chara = Hashtbl.find pc_tbl chara_id in
+          chara#go ~dir
+      | _ -> []
+    )
   | (Event.Client_message (cid, Protocol.Raw_client_protocol (Protocol.Turn maybe_dir))) ->
     (match Hashtbl.find_all client_table cid with
         [chara_id] ->
           (match maybe_dir with
-              None -> [] (* tentative *)
+              None -> []
             | Some dir ->
-              Phi_map.set_chara_direction ~chara_id ~dir;
               let chara = Hashtbl.find pc_tbl chara_id in
-              chara#sight_change (Chara.Appear_chara (chara, {Phi_map.x = 0; Phi_map.y = 0}))
+              chara#turn ~dir
           )
       | _ -> []
     )
+
   | (Event.Client_message (cid, Protocol.Sharp_client_protocol (Protocol.Open phirc))) ->
     let chid = Chara_id.get_next_chara_id () in
+    Hashtbl.replace client_table cid chid;
     let pc = Player_character.create ~phirc ~cid ~chid in
     Hashtbl.replace pc_tbl chid pc;
-    Hashtbl.replace client_table cid chid;
-    [Event.Position_change (chid, (None, Some pc#get_position))]
+    [Event.Position_change (chid, (None, Some (Phi_map.get_chara_position ~chara_id:chid)))]
   | (Event.Client_message (_, Protocol.Sharp_client_protocol (Protocol.Unknown))) ->
     [] (* tentative *)
 
@@ -38,12 +43,14 @@ let execute_event = function
     let target_chara = Hashtbl.find pc_tbl chid in
     let cansee_old_chara_list =
       match maybe_old_pos with
-          Some old_pos -> Phi_map.get_cansee_chara_list ~pos:old_pos
+          Some old_pos ->
+            List.filter (fun (id, _) -> chid <> id) (Phi_map.get_cansee_chara_list ~pos:old_pos)
         | None -> []
     in
     let cansee_new_chara_list =
       match maybe_new_pos with
-          Some new_pos -> Phi_map.get_cansee_chara_list ~pos:new_pos
+          Some new_pos -> 
+            List.filter (fun (id, _) -> chid <> id) (Phi_map.get_cansee_chara_list ~pos:new_pos)
         | None -> []
     in
     let chara_list_appear =
