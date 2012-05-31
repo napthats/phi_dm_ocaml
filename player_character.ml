@@ -36,6 +36,6 @@ let create ~phirc ~cid ~chid : Chara.chara =
       self#send_message (Protocol.encode_server_protocol (Protocol.M57Map (Phi_map.get_mapview ~chara_id:chid)))
   end in
   Phi_map.set_chara_position ~chara_id:chid ~pos;
-  Phi_map.set_chara_direction ~chara_id:chid ~dir;
+  Phi_map.set_chara_direction ~chara_id:chid ~dir:(Phi_map.Absolute_direction dir);
   chara
 ;;

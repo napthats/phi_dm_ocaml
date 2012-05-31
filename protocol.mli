@@ -1,5 +1,7 @@
 type raw_client_protocol =
     Raw_message of string
+  | Go of Phi_map.direction
+  | Turn of Phi_map.direction option
 
 type sharp_client_protocol =
     Open of string

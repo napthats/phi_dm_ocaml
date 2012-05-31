@@ -8,7 +8,11 @@ type position = {px : int; py : int};;
 
 type view_position = {x : int; y : int};;
 
-type absolute_direction = North | East | West | South
+type absolute_direction = North | East | West | South;;
+
+type relative_direction = Forth | Right | Left | Back;;
+
+type direction = Absolute_direction of absolute_direction | Relative_direction of relative_direction;;
 
 type mapchip_view = Bars | Door | Dummy | Flower | Glass | Grass | Mist | Mwall | Pcircle | Road | Rock | Tgate | Unknown | Water | Window | Wood | Wwall | Door_lock | Pcircle_lock
 
@@ -52,8 +56,29 @@ let set_chara_position ~chara_id ~pos =
   Hashtbl.replace charaid_pos_tbl chara_id pos
 ;;
 
+let turn_absolute_direction = function
+    (adir, Forth) -> adir
+  | (North, Right) -> East
+  | (North, Left) -> West
+  | (North, Back) -> South
+  | (East, Right) -> South
+  | (East, Left) -> North
+  | (East, Back) -> West
+  | (West, Right) -> North
+  | (West, Left) -> South
+  | (West, Back) -> East
+  | (South, Right) -> West
+  | (South, Left) -> East
+  | (South, Back) -> North
+;;
+
 let set_chara_direction ~chara_id ~dir =
-  Hashtbl.replace charaid_dir_tbl chara_id dir
+  match dir with
+      Absolute_direction adir ->
+        Hashtbl.replace charaid_dir_tbl chara_id adir
+    | Relative_direction rdir ->
+        let base_adir = Hashtbl.find charaid_dir_tbl chara_id in
+        Hashtbl.replace charaid_dir_tbl chara_id (turn_absolute_direction (base_adir, rdir))
 ;;
 
 

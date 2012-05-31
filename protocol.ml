@@ -1,7 +1,10 @@
 open ExtString
 
+
 type raw_client_protocol =
     Raw_message of string
+  | Go of Phi_map.direction
+  | Turn of Phi_map.direction option
 ;;
 
 type sharp_client_protocol =
@@ -14,19 +17,47 @@ type client_protocol =
   | Sharp_client_protocol of sharp_client_protocol
 ;;
 
+
 let decode_sharp_client_protocol protocol =
   match String.nsplit protocol " " with
       ["open"; phirc] -> Open phirc
     | _ -> Unknown
 ;;
 
-let decode_raw_client_protocol protocol = Raw_message protocol;;
+let string_to_direction = function
+    "" -> None
+  | str ->
+    match str.[0] with
+        'n' -> Some (Phi_map.Absolute_direction Phi_map.North)
+      | 'e' -> Some (Phi_map.Absolute_direction Phi_map.East)
+      | 'w' -> Some (Phi_map.Absolute_direction Phi_map.West)
+      | 's' -> Some (Phi_map.Absolute_direction Phi_map.South)
+      | 'f' -> Some (Phi_map.Relative_direction Phi_map.Forth)
+      | 'r' -> Some (Phi_map.Relative_direction Phi_map.Right)
+      | 'l' -> Some (Phi_map.Relative_direction Phi_map.Left)
+      | 'b' -> Some (Phi_map.Relative_direction Phi_map.Back)
+      | _ -> None
+;;
+
+let decode_raw_client_protocol protocol =
+  match String.nsplit protocol " " with
+      ["go"] -> Go (Phi_map.Relative_direction Phi_map.Forth)
+    | ["go"; dir] ->
+      (match string_to_direction dir with
+          None -> Go (Phi_map.Relative_direction Phi_map.Forth)
+        | Some d -> Go d)
+    | ["turn"] -> Turn None
+    | ["turn"; dir] -> Turn (string_to_direction dir)
+    | _ -> Raw_message protocol
+;;
+
 
 let decode_client_protocol protocol =
   if protocol.[0] = '#'
   then Sharp_client_protocol (decode_sharp_client_protocol (String.lchop protocol))
   else Raw_client_protocol (decode_raw_client_protocol protocol)
 ;;
+
 
 type server_protocol =
     M57Map of (Phi_map.absolute_direction * ((Phi_map.mapchip_view list) list))

@@ -11,6 +11,20 @@ let execute_event = function
 (* tentative *)
     Client_manager.send_message ~cid ~msg;
     []
+  | (Event.Client_message (_, Protocol.Raw_client_protocol (Protocol.Go _))) ->
+    [] (* tentative *)
+  | (Event.Client_message (cid, Protocol.Raw_client_protocol (Protocol.Turn maybe_dir))) ->
+    (match Hashtbl.find_all client_table cid with
+        [chara_id] ->
+          (match maybe_dir with
+              None -> [] (* tentative *)
+            | Some dir ->
+              Phi_map.set_chara_direction ~chara_id ~dir;
+              let chara = Hashtbl.find pc_tbl chara_id in
+              chara#sight_change (Chara.Appear_chara (chara, {Phi_map.x = 0; Phi_map.y = 0}))
+          )
+      | _ -> []
+    )
   | (Event.Client_message (cid, Protocol.Sharp_client_protocol (Protocol.Open phirc))) ->
     let chid = Chara_id.get_next_chara_id () in
     let pc = Player_character.create ~phirc ~cid ~chid in
@@ -19,6 +33,7 @@ let execute_event = function
     [Event.Position_change (chid, (None, Some pc#get_position))]
   | (Event.Client_message (_, Protocol.Sharp_client_protocol (Protocol.Unknown))) ->
     [] (* tentative *)
+
   | (Event.Position_change (chid, (maybe_old_pos, maybe_new_pos))) ->
     let target_chara = Hashtbl.find pc_tbl chid in
     let cansee_old_chara_list =
