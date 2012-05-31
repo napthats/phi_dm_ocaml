@@ -1,4 +1,4 @@
-OCAMLC=ocamlfind ocamlc -linkpkg -package extlib -thread
+OCAMLC=ocamlfind ocamlc -w A -linkpkg -package extlib -thread
 OCAMLOPT=ocamlopt
 OCAMLDEP=ocamldep
 INCLUDES=                 # all relevant -I options here

@@ -4,8 +4,8 @@ chara.cmi: phi_map.cmi event.cmi
 client_manager.cmi: tcp_server.cmi event.cmi
 event.cmi: tcp_server.cmi protocol.cmi phi_map.cmi chara_id.cmi
 phi_map.cmi: chara_id.cmi
-player_character.cmi: tcp_server.cmi chara.cmi
-protocol.cmi:
+player_character.cmi: tcp_server.cmi chara_id.cmi chara.cmi
+protocol.cmi: phi_map.cmi
 tcp_server.cmi:
 chara_id.cmo: chara_id.cmi
 chara_id.cmx: chara_id.cmi
@@ -27,5 +27,5 @@ player_character.cmo: phi_map.cmi client_manager.cmi chara.cmi \
     player_character.cmi
 player_character.cmx: phi_map.cmx client_manager.cmx chara.cmx \
     player_character.cmi
-protocol.cmo: protocol.cmi
-protocol.cmx: protocol.cmi
+protocol.cmo: phi_map.cmi protocol.cmi
+protocol.cmx: phi_map.cmx protocol.cmi

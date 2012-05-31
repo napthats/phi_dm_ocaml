@@ -12,11 +12,10 @@ let execute_event = function
     Client_manager.send_message ~cid ~msg;
     []
   | (Event.Client_message (cid, Protocol.Sharp_client_protocol (Protocol.Open phirc))) ->
-    let pc = Player_character.create ~phirc ~cid in
     let chid = Chara_id.get_next_chara_id () in
-    Hashtbl.add pc_tbl chid pc;
-    Hashtbl.add client_table cid chid;
-    Phi_map.set_chara_position ~chara_id:chid ~pos:(pc#get_position);
+    let pc = Player_character.create ~phirc ~cid ~chid in
+    Hashtbl.replace pc_tbl chid pc;
+    Hashtbl.replace client_table cid chid;
     [Event.Position_change (chid, (None, Some pc#get_position))]
   | (Event.Client_message (_, Protocol.Sharp_client_protocol (Protocol.Unknown))) ->
     [] (* tentative *)

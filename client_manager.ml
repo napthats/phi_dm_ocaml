@@ -7,4 +7,4 @@ let fetch_messages () =
     server#get_each_client_messages
 ;;
 
-let send_message ~cid ~msg = server#send_message_to ~cid ~msg;;
+let send_message ~cid ~msg = server#send_message_to ~cid ~msg:(msg ^ "\n");;
