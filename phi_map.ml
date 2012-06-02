@@ -40,10 +40,6 @@ let charaid_dir_tbl = Hashtbl.create 100;;
 
 let get_default_position = {px = 0; py = 0};;
 
-let get_cansee_chara_list ~pos:_ =
-  List.map (fun chid -> (chid, {x = 0; y = 0})) (List.of_enum (Hashtbl.keys charaid_pos_tbl))
-;;
-
 let set_chara_position ~chara_id ~pos =
   (match Hashtbl.find_all charaid_pos_tbl chara_id with
       [] -> ()
@@ -117,7 +113,7 @@ let get_chip_with_outer pos =
   else chip_outer
 ;;
 
-let sight_offset_for_client_north =
+let normal_sight_offset_north =
   [[(-3, -4); (-2, -4); (-1, -4); (0, -4); (1, -4); (2, -4); (3, -4)]
   ;[(-3, -3); (-2, -3); (-1, -3); (0, -3); (1, -3); (2, -3); (3, -3)]
   ;[(-3, -2); (-2, -2); (-1, -2); (0, -2); (1, -2); (2, -2); (3, -2)]
@@ -127,11 +123,11 @@ let sight_offset_for_client_north =
   ;[(-3, 2); (-2, 2); (-1, 2); (0, 2); (1, 2); (2, 2); (3, 2)]]
 ;;
 
-let get_sight_offset_for_client = function
-    North -> sight_offset_for_client_north
-  | East -> List.map (List.rev $ (List.map (fun (x, y) -> (-y, -x)))) sight_offset_for_client_north
-  | West -> List.map (List.rev $ (List.map (fun (x, y) -> (y, x)))) sight_offset_for_client_north
-  | South -> List.map (List.map (fun (x, y) -> (-x, -y))) sight_offset_for_client_north
+let get_normal_sight_offset = function
+    North -> normal_sight_offset_north
+  | East -> List.map (List.rev $ (List.map (fun (x, y) -> (-y, -x)))) normal_sight_offset_north
+  | West -> List.map (List.rev $ (List.map (fun (x, y) -> (y, x)))) normal_sight_offset_north
+  | South -> List.map (List.map (fun (x, y) -> (-x, -y))) normal_sight_offset_north
 ;;
 
 let get_mapview ~chara_id =
@@ -140,7 +136,27 @@ let get_mapview ~chara_id =
   let view =
     List.map
       (List.map (fun (ox, oy) ->  fst (get_chip_with_outer ({px = pos.px + ox; py = pos.py + oy}))))
-      (get_sight_offset_for_client dir)
+      (get_normal_sight_offset dir)
   in
   (dir, view)
+;;
+
+let get_cansee_chara_list ~pos =
+  let pos_to_sight_viewpos dir pos =
+    List.map
+      (fun (ox, oy) -> ({px = pos.px + ox; py = pos.py + oy}, {x = ox; y = oy}))
+      (List.concat (get_normal_sight_offset dir))
+  in
+  let chara_sight_viewpos_list =
+    List.map
+      (fun (chid, pos) -> (chid, pos_to_sight_viewpos (Hashtbl.find charaid_dir_tbl chid) pos))
+      (List.of_enum (Hashtbl.enum charaid_pos_tbl))
+  in
+  List.filter_map
+    (fun (chid, pos_viewpos_list) ->
+      match List.find_all ((=) pos $ fst) pos_viewpos_list with
+          [] -> None
+        | pos_viewpos :: _ -> Some (chid, snd pos_viewpos)
+    )
+    chara_sight_viewpos_list
 ;;
