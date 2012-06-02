@@ -1,4 +1,4 @@
-let create ~phirc ~cid ~chid : Chara.chara = 
+let create ~phirc ~cid ~chid = 
   let chara = object (self)
     val cid = cid
     val phirc = phirc
@@ -53,6 +53,7 @@ let create ~phirc ~cid ~chid : Chara.chara =
       let pos = Phi_map.get_chara_position ~chara_id:chid in
       match Phi_map.get_neighbor_position ~pos ~adir with
           None -> 
+            self#send_message (Dm_message.make Dm_message.Go_no);
             []
         | Some next_pos ->
           let old_pos = Phi_map.get_chara_position ~chara_id:chid in

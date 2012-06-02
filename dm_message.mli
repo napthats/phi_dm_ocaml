@@ -1,4 +1,5 @@
-type dm_message_type =
+type msg_type =
     Go_no
+  | Turn_bad
 
-val make_dm_message : dm_message_type -> string
+val make : msg_type -> string

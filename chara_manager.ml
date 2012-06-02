@@ -22,7 +22,9 @@ let execute_event = function
     (match Hashtbl.find_all client_table cid with
         [chara_id] ->
           (match maybe_dir with
-              None -> []
+              None -> 
+                Client_manager.send_message ~cid ~msg:(Dm_message.make Dm_message.Turn_bad);
+                []
             | Some dir ->
               let chara = Hashtbl.find pc_tbl chara_id in
               chara#turn ~dir
