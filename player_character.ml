@@ -84,11 +84,18 @@ let create ~phirc ~cid ~chid =
     method defense ~combat:_ ~achid:_ =
       []
 
-    method resolve_attack_result ~vsname ~result_list ~dchid:_ =
-      let name = self#get_name in
+    method resolve_attack_result ~result_list ~dchid =
+      let aname = self#get_name in
+      let dname =
+        match Chara_name_cache.get_name ~chid:dchid with
+            None -> "????"
+          | Some n -> n
+      in
       let result_to_message = function
           Combat.Hp_damage value ->
-            Dm_message.make (Dm_message.Attack_hp (name, vsname, "knuckle", value))
+          Dm_message.make (Dm_message.Attack_hp (aname, dname, "knuckle", value))
+        | Combat.Kill ->
+          Dm_message.make (Dm_message.Kill_by (aname, dname))
       in
       ignore (List.map (self#send_message $ result_to_message) result_list);
       []

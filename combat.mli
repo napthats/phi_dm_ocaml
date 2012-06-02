@@ -1,4 +1,6 @@
-type result = Hp_damage of int
+type result =
+    Hp_damage of int
+  | Kill
 
 type t = Chara_status.t -> (Chara_status.t * result list)
 

@@ -32,3 +32,6 @@ val get_mapview : chara_id:Chara_id.t -> (absolute_direction * (mapchip_view lis
 val turn_absolute_direction : adir:absolute_direction -> rdir:relative_direction -> absolute_direction
 
 val get_chara_list_with_position : pos:position -> Chara_id.t list
+
+(* throw exeption if there is no chara with chara_id *)
+val delete_chara : chara_id:Chara_id.t -> unit

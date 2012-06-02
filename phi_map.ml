@@ -46,9 +46,9 @@ let set_chara_position ~chara_id ~pos =
     | old_pos :: _ ->
       let (ct, chara_list) = phi_map.(old_pos.py).(old_pos.px) in
       phi_map.(old_pos.py).(old_pos.px) <- (ct, List.remove chara_list chara_id));
-  (match phi_map.(pos.px).(pos.py) with
+  (match phi_map.(pos.py).(pos.px) with
       (ct, chara_list) ->
-        phi_map.(pos.px).(pos.py) <- (ct, chara_id :: chara_list));
+        phi_map.(pos.py).(pos.px) <- (ct, chara_id :: chara_list));
   Hashtbl.replace charaid_pos_tbl chara_id pos
 ;;
 
@@ -163,4 +163,12 @@ let get_cansee_chara_list ~pos =
 
 let get_chara_list_with_position ~pos =
   snd phi_map.(pos.py).(pos.px)
+;;
+
+let delete_chara ~chara_id:chid =
+  let pos = Hashtbl.find charaid_pos_tbl chid in
+  let map_chip = phi_map.(pos.py).(pos.px) in
+  phi_map.(pos.py).(pos.px) <- (fst map_chip, List.filter ((<>) chid) (snd map_chip));
+  Hashtbl.remove charaid_pos_tbl chid;
+  Hashtbl.remove charaid_dir_tbl chid
 ;;

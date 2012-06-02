@@ -10,6 +10,5 @@ t = <get_name : string;
      do_action : Event.t list;
      hit : Event.t list;
      defense : combat:Combat.t -> achid:Chara_id.t -> Event.t list;
-     resolve_attack_result :
-       vsname:string -> result_list:Combat.result list -> dchid:Chara_id.t -> Event.t list>
+     resolve_attack_result : result_list:Combat.result list -> dchid:Chara_id.t -> Event.t list>
 ;;

@@ -45,9 +45,8 @@ let create ~chid =
           [event]
 
     method do_action =
-(*      let random_adir = adirs.(Random.int 4) in
-      self#go ~dir:(Phi_map.Absolute_direction random_adir) *)
-      []
+      let random_adir = adirs.(Random.int 4) in
+      self#go ~dir:(Phi_map.Absolute_direction random_adir)
 
     method hit =
       []
@@ -55,9 +54,11 @@ let create ~chid =
     method defense ~combat ~achid =
       let (new_status, result_list) = combat status in
       status <- new_status;
-      [Event.Attack_result ((achid, chid), (self#get_name, result_list))]
+      if is_dead ~status
+      then [Event.Attack_result ((achid, chid), result_list); Event.Dead chid]
+      else [Event.Attack_result ((achid, chid), result_list)]
 
-    method resolve_attack_result ~vsname:_ ~result_list:_ ~dchid:_ =
+    method resolve_attack_result ~result_list:_ ~dchid:_ =
       []
   end in
   let pos = Phi_map.get_default_position in (* tentative *)
