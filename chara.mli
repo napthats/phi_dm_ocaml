@@ -7,5 +7,4 @@ chara =
     <get_name : string;
      sight_change : sight_change_type -> Event.event list;
      turn : dir:Phi_map.direction -> Event.event list;
-     go : dir:Phi_map.direction -> Event.event list;
-     mapview_update : unit>
+     go : dir:Phi_map.direction -> Event.event list>

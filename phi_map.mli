@@ -20,10 +20,13 @@ val set_chara_position : chara_id:Chara_id.chara_id -> pos:position -> unit
 
 val set_chara_direction : chara_id:Chara_id.chara_id -> adir:absolute_direction -> unit
 
+(* throw exeption if there is no chara with chara_id *)
 val get_chara_position : chara_id:Chara_id.chara_id -> position
 
+(* throw exeption if there is no chara with chara_id *)
 val get_chara_absolute_direction : chara_id:Chara_id.chara_id -> absolute_direction
 
+(* throw exeption if there is no chara with chara_id *)
 val get_mapview : chara_id:Chara_id.chara_id -> (absolute_direction * (mapchip_view list) list)
 
 val turn_absolute_direction : adir:absolute_direction -> rdir:relative_direction -> absolute_direction
