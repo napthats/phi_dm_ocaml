@@ -1,6 +1,8 @@
-type event =
+type t =
     Client_message of (Tcp_server.client_id * Protocol.client_protocol) 
-  | Position_change of (Chara_id.chara_id * (Phi_map.position option * Phi_map.position option))
+  | Position_change of (Chara_id.t * (Phi_map.position option * Phi_map.position option))
+  | Npc_appear
+  | Tick
 (*  | Status_view_change of (Chara_manager.chara_id * Phi_map.position
                       * (Chara_manager.chara_status_view * Chara_manager.chara_status_view))
   | Time_tick of int *)

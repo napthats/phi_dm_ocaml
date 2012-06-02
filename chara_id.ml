@@ -1,4 +1,4 @@
-type chara_id = int;;
+type t = int;;
 
 let current_chara_id = ref 0;;
 

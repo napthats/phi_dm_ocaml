@@ -1,3 +1,3 @@
-type chara_id
+type t
 
-val get_next_chara_id : unit -> chara_id
+val get_next_chara_id : unit -> t

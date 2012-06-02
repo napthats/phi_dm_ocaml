@@ -113,7 +113,7 @@ let get_chip_with_outer pos =
   else chip_outer
 ;;
 
-let normal_sight_offset_north =
+let normal_sight_offset =
   [[(-3, -4); (-2, -4); (-1, -4); (0, -4); (1, -4); (2, -4); (3, -4)]
   ;[(-3, -3); (-2, -3); (-1, -3); (0, -3); (1, -3); (2, -3); (3, -3)]
   ;[(-3, -2); (-2, -2); (-1, -2); (0, -2); (1, -2); (2, -2); (3, -2)]
@@ -124,10 +124,10 @@ let normal_sight_offset_north =
 ;;
 
 let get_normal_sight_offset = function
-    North -> normal_sight_offset_north
-  | East -> List.map (List.rev $ (List.map (fun (x, y) -> (-y, -x)))) normal_sight_offset_north
-  | West -> List.map (List.rev $ (List.map (fun (x, y) -> (y, x)))) normal_sight_offset_north
-  | South -> List.map (List.map (fun (x, y) -> (-x, -y))) normal_sight_offset_north
+    North -> normal_sight_offset
+  | East -> List.map (List.rev $ (List.map (fun (x, y) -> (-y, -x)))) normal_sight_offset
+  | West -> List.map (List.rev $ (List.map (fun (x, y) -> (y, x)))) normal_sight_offset
+  | South -> List.map (List.map (fun (x, y) -> (-x, -y))) normal_sight_offset
 ;;
 
 let get_mapview ~chara_id =
@@ -144,8 +144,8 @@ let get_mapview ~chara_id =
 let get_cansee_chara_list ~pos =
   let pos_to_sight_viewpos dir pos =
     List.map
-      (fun (ox, oy) -> ({px = pos.px + ox; py = pos.py + oy}, {x = ox; y = oy}))
-      (List.concat (get_normal_sight_offset dir))
+      (fun ((ox, oy), (vx, vy)) -> ({px = pos.px + ox; py = pos.py + oy}, {x = vx; y = vy}))
+      (List.combine (List.concat (get_normal_sight_offset dir)) (List.concat normal_sight_offset))
   in
   let chara_sight_viewpos_list =
     List.map

@@ -1,9 +1,12 @@
 open ExtList
+open ExtHashtbl
 
 let ($) f g x = f (g x);;
 
-let pc_tbl = Hashtbl.create 100;;
+(* chara_id, chara *)
+let chara_tbl = Hashtbl.create 100;;
 
+(* client_id, chara_id *)
 let client_table = Hashtbl.create 100;;
 
 let execute_event = function
@@ -14,7 +17,7 @@ let execute_event = function
   | (Event.Client_message (cid, Protocol.Raw_client_protocol (Protocol.Go dir))) ->
     (match Hashtbl.find_all client_table cid with
         [chara_id] ->
-          let chara = Hashtbl.find pc_tbl chara_id in
+          let chara = Hashtbl.find chara_tbl chara_id in
           chara#go ~dir
       | _ -> []
     )
@@ -26,7 +29,7 @@ let execute_event = function
                 Client_manager.send_message ~cid ~msg:(Dm_message.make Dm_message.Turn_bad);
                 []
             | Some dir ->
-              let chara = Hashtbl.find pc_tbl chara_id in
+              let chara = Hashtbl.find chara_tbl chara_id in
               chara#turn ~dir
           )
       | _ -> []
@@ -36,13 +39,22 @@ let execute_event = function
     let chid = Chara_id.get_next_chara_id () in
     Hashtbl.replace client_table cid chid;
     let pc = Player_character.create ~phirc ~cid ~chid in
-    Hashtbl.replace pc_tbl chid pc;
+    Hashtbl.replace chara_tbl chid pc;
     [Event.Position_change (chid, (None, Some (Phi_map.get_chara_position ~chara_id:chid)))]
   | (Event.Client_message (_, Protocol.Sharp_client_protocol (Protocol.Unknown))) ->
     [] (* tentative *)
 
+  | Event.Tick ->
+    List.concat (List.map (fun chara -> chara#do_action) (List.of_enum (Hashtbl.values chara_tbl)))
+
+  | Event.Npc_appear ->
+    let chid = Chara_id.get_next_chara_id () in
+    let npc = Non_player_character.create ~chid in
+    Hashtbl.replace chara_tbl chid npc;
+    [Event.Position_change (chid, (None, Some (Phi_map.get_chara_position ~chara_id:chid)))]
+
   | (Event.Position_change (chid, (maybe_old_pos, maybe_new_pos))) ->
-    let target_chara = Hashtbl.find pc_tbl chid in
+    let target_chara = Hashtbl.find chara_tbl chid in
     let cansee_old_chara_list =
       match maybe_old_pos with
           Some old_pos ->
@@ -73,9 +85,9 @@ let execute_event = function
       List.filter (fun (chid_old, _) -> not (List.exists (fun (chid_new, _) -> chid_new = chid_old) cansee_new_chara_list)) cansee_old_chara_list
     in
     List.concat 
-      ((List.map (fun (chid, view_pos) -> (Hashtbl.find pc_tbl chid)#sight_change (Chara.Appear_chara (target_chara, view_pos))) chara_list_appear)
-      @ (List.map (fun (chid, view_pos_pair) -> (Hashtbl.find pc_tbl chid)#sight_change (Chara.Move_chara (target_chara, view_pos_pair))) chara_list_move)
-      @ (List.map (fun (chid, view_pos) -> (Hashtbl.find pc_tbl chid)#sight_change (Chara.Disappear_chara (target_chara, view_pos))) chara_list_disappear))
+      ((List.map (fun (chid, view_pos) -> (Hashtbl.find chara_tbl chid)#sight_change (Chara.Appear_chara (target_chara, view_pos))) chara_list_appear)
+      @ (List.map (fun (chid, view_pos_pair) -> (Hashtbl.find chara_tbl chid)#sight_change (Chara.Move_chara (target_chara, view_pos_pair))) chara_list_move)
+      @ (List.map (fun (chid, view_pos) -> (Hashtbl.find chara_tbl chid)#sight_change (Chara.Disappear_chara (target_chara, view_pos))) chara_list_disappear))
 ;;
 
 let event_dispatch ~event_list =

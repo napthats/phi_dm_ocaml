@@ -34,7 +34,7 @@ let create ~phirc ~cid ~chid =
         (match dir with
             Phi_map.Absolute_direction adir -> adir
           | Phi_map.Relative_direction rdir ->
-            let adir =Phi_map.get_chara_absolute_direction ~chara_id:chid in
+            let adir = Phi_map.get_chara_absolute_direction ~chara_id:chid in
             Phi_map.turn_absolute_direction ~adir ~rdir
         )
       in
@@ -47,7 +47,7 @@ let create ~phirc ~cid ~chid =
         match dir with
             Phi_map.Absolute_direction adir -> adir
           | Phi_map.Relative_direction rdir ->
-            let adir =Phi_map.get_chara_absolute_direction ~chara_id:chid in
+            let adir = Phi_map.get_chara_absolute_direction ~chara_id:chid in
             Phi_map.turn_absolute_direction ~adir ~rdir
       in
       let pos = Phi_map.get_chara_position ~chara_id:chid in
@@ -61,6 +61,9 @@ let create ~phirc ~cid ~chid =
           Phi_map.set_chara_position ~chara_id:chid ~pos:next_pos;
           self#mapview_update;
           [event]
+
+    method do_action =
+      []
 
     method private send_message msg = Client_manager.send_message ~cid ~msg
     method private mapview_update =
