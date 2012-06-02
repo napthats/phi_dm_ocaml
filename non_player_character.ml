@@ -1,10 +1,17 @@
+open Chara_status
+
+
 let adirs = [|Phi_map.North; Phi_map.East; Phi_map.West; Phi_map.South|];;
 
 let create ~chid =
   let chara = object (self)
     val chid = chid
+    val mutable status =
+      Chara_status.create ~view:{hp = 300; mhp = 1200; mp = 100; mmp = 500;
+                                 flv = 0; wlv = 1; mlv = 2; clv = 3;
+                                 state = Command; condition = []}
 
-    method get_name = "npc"
+    method get_name = "npc " ^ (string_of_int (Chara_id.to_num ~id:chid))
     method sight_change _ = []
 
     method turn ~dir =
@@ -38,8 +45,20 @@ let create ~chid =
           [event]
 
     method do_action =
-      let random_adir = adirs.(Random.int 4) in
-      self#go ~dir:(Phi_map.Absolute_direction random_adir)
+(*      let random_adir = adirs.(Random.int 4) in
+      self#go ~dir:(Phi_map.Absolute_direction random_adir) *)
+      []
+
+    method hit =
+      []
+
+    method defense ~combat ~achid =
+      let (new_status, result_list) = combat status in
+      status <- new_status;
+      [Event.Attack_result ((achid, chid), (self#get_name, result_list))]
+
+    method resolve_attack_result ~vsname:_ ~result_list:_ ~dchid:_ =
+      []
   end in
   let pos = Phi_map.get_default_position in (* tentative *)
   let adir = Phi_map.North in (* tentative *)

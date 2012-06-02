@@ -160,3 +160,7 @@ let get_cansee_chara_list ~pos =
     )
     chara_sight_viewpos_list
 ;;
+
+let get_chara_list_with_position ~pos =
+  snd phi_map.(pos.py).(pos.px)
+;;

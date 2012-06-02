@@ -1,8 +1,9 @@
 chara_id.cmi:
 chara_manager.cmi: event.cmo
+chara_status.cmi:
 client_manager.cmi: tcp_server.cmi event.cmo
 clock.cmi: event.cmo
-dm_message.cmi:
+combat.cmi: chara_status.cmi
 non_player_character.cmi: chara_id.cmi chara.cmo
 phi_map.cmi: chara_id.cmi
 player_character.cmi: tcp_server.cmi chara_id.cmi chara.cmo
@@ -11,30 +12,38 @@ tcp_server.cmi:
 chara_id.cmo: chara_id.cmi
 chara_id.cmx: chara_id.cmi
 chara_manager.cmo: protocol.cmi player_character.cmi phi_map.cmi \
-    non_player_character.cmi event.cmo dm_message.cmi client_manager.cmi \
+    non_player_character.cmi event.cmo dm_message.cmo client_manager.cmi \
     chara_id.cmi chara.cmo chara_manager.cmi
 chara_manager.cmx: protocol.cmx player_character.cmx phi_map.cmx \
     non_player_character.cmx event.cmx dm_message.cmx client_manager.cmx \
     chara_id.cmx chara.cmx chara_manager.cmi
-chara.cmo: phi_map.cmi event.cmo
-chara.cmx: phi_map.cmx event.cmx
+chara.cmo: phi_map.cmi event.cmo combat.cmi chara_id.cmi
+chara.cmx: phi_map.cmx event.cmx combat.cmx chara_id.cmx
+chara_status.cmo: chara_status.cmi
+chara_status.cmx: chara_status.cmi
 client_manager.cmo: tcp_server.cmi protocol.cmi event.cmo client_manager.cmi
 client_manager.cmx: tcp_server.cmi protocol.cmx event.cmx client_manager.cmi
-clock.cmo: clock.cmi
-clock.cmx: clock.cmi
-dm_message.cmo: dm_message.cmi
-dm_message.cmx: dm_message.cmi
-event.cmo: tcp_server.cmi protocol.cmi phi_map.cmi chara_id.cmi
-event.cmx: tcp_server.cmi protocol.cmx phi_map.cmx chara_id.cmx
-non_player_character.cmo: phi_map.cmi event.cmo non_player_character.cmi
-non_player_character.cmx: phi_map.cmx event.cmx non_player_character.cmi
-phi_dm.cmo: client_manager.cmi chara_manager.cmi
-phi_dm.cmx: client_manager.cmx chara_manager.cmx
+clock.cmo: event.cmo clock.cmi
+clock.cmx: event.cmx clock.cmi
+combat.cmo: chara_status.cmi combat.cmi
+combat.cmx: chara_status.cmx combat.cmi
+dm_message.cmo:
+dm_message.cmx:
+event.cmo: tcp_server.cmi protocol.cmi phi_map.cmi combat.cmi chara_id.cmi
+event.cmx: tcp_server.cmi protocol.cmx phi_map.cmx combat.cmx chara_id.cmx
+non_player_character.cmo: phi_map.cmi event.cmo chara_status.cmi \
+    non_player_character.cmi
+non_player_character.cmx: phi_map.cmx event.cmx chara_status.cmx \
+    non_player_character.cmi
+phi_dm.cmo: clock.cmi client_manager.cmi chara_manager.cmi
+phi_dm.cmx: clock.cmx client_manager.cmx chara_manager.cmx
 phi_map.cmo: phi_map.cmi
 phi_map.cmx: phi_map.cmi
-player_character.cmo: protocol.cmi phi_map.cmi event.cmo dm_message.cmi \
-    client_manager.cmi chara.cmo player_character.cmi
+player_character.cmo: protocol.cmi phi_map.cmi event.cmo dm_message.cmo \
+    combat.cmi client_manager.cmi chara_status.cmi chara.cmo \
+    player_character.cmi
 player_character.cmx: protocol.cmx phi_map.cmx event.cmx dm_message.cmx \
-    client_manager.cmx chara.cmx player_character.cmi
+    combat.cmx client_manager.cmx chara_status.cmx chara.cmx \
+    player_character.cmi
 protocol.cmo: phi_map.cmi protocol.cmi
 protocol.cmx: phi_map.cmx protocol.cmi

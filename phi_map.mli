@@ -30,3 +30,5 @@ val get_chara_absolute_direction : chara_id:Chara_id.t -> absolute_direction
 val get_mapview : chara_id:Chara_id.t -> (absolute_direction * (mapchip_view list) list)
 
 val turn_absolute_direction : adir:absolute_direction -> rdir:relative_direction -> absolute_direction
+
+val get_chara_list_with_position : pos:position -> Chara_id.t list

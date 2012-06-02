@@ -3,6 +3,8 @@ type t =
   | Position_change of (Chara_id.t * (Phi_map.position option * Phi_map.position option))
   | Npc_appear
   | Tick
+  | Attack_to of (Chara_id.t * (Phi_map.position * Combat.t))
+  | Attack_result of ((Chara_id.t * Chara_id.t) * (string * Combat.result list))
 (*  | Status_view_change of (Chara_manager.chara_id * Phi_map.position
                       * (Chara_manager.chara_status_view * Chara_manager.chara_status_view))
   | Time_tick of int *)

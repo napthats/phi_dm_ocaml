@@ -7,3 +7,5 @@ let get_next_chara_id () =
   current_chara_id := !current_chara_id + 1;
   cid
 ;;
+
+let to_num ~id = id

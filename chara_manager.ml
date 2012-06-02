@@ -10,18 +10,18 @@ let chara_tbl = Hashtbl.create 100;;
 let client_table = Hashtbl.create 100;;
 
 let execute_event = function
-    (Event.Client_message (cid, Protocol.Raw_client_protocol (Protocol.Raw_message msg))) ->
+    Event.Client_message (cid, Protocol.Raw_client_protocol (Protocol.Raw_message msg)) ->
 (* tentative *)
     Client_manager.send_message ~cid ~msg;
     []
-  | (Event.Client_message (cid, Protocol.Raw_client_protocol (Protocol.Go dir))) ->
+  | Event.Client_message (cid, Protocol.Raw_client_protocol (Protocol.Go dir)) ->
     (match Hashtbl.find_all client_table cid with
         [chara_id] ->
           let chara = Hashtbl.find chara_tbl chara_id in
           chara#go ~dir
       | _ -> []
     )
-  | (Event.Client_message (cid, Protocol.Raw_client_protocol (Protocol.Turn maybe_dir))) ->
+  | Event.Client_message (cid, Protocol.Raw_client_protocol (Protocol.Turn maybe_dir)) ->
     (match Hashtbl.find_all client_table cid with
         [chara_id] ->
           (match maybe_dir with
@@ -34,6 +34,13 @@ let execute_event = function
           )
       | _ -> []
     )
+  | Event.Client_message (cid, Protocol.Raw_client_protocol Protocol.Hit) ->
+    (match Hashtbl.find_all client_table cid with
+        [chara_id] ->
+          let chara = Hashtbl.find chara_tbl chara_id in
+          chara#hit
+      | _ -> []
+    )     
 
   | (Event.Client_message (cid, Protocol.Sharp_client_protocol (Protocol.Open phirc))) ->
     let chid = Chara_id.get_next_chara_id () in
@@ -52,6 +59,17 @@ let execute_event = function
     let npc = Non_player_character.create ~chid in
     Hashtbl.replace chara_tbl chid npc;
     [Event.Position_change (chid, (None, Some (Phi_map.get_chara_position ~chara_id:chid)))]
+
+  | Event.Attack_to (achid, (pos, combat)) ->
+    let defense_chara_list = Phi_map.get_chara_list_with_position ~pos in
+    List.concat
+      (List.map (fun dchid-> (Hashtbl.find chara_tbl dchid)#defense ~combat ~achid) defense_chara_list)
+  | Event.Attack_result ((achid, dchid), (vsname, result_list)) ->
+    (match Hashtbl.find_all chara_tbl achid with
+        [chara] ->
+          chara#resolve_attack_result ~vsname ~result_list ~dchid
+      | _ -> []
+    )
 
   | (Event.Position_change (chid, (maybe_old_pos, maybe_new_pos))) ->
     let target_chara = Hashtbl.find chara_tbl chid in

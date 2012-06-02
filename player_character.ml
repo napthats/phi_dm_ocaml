@@ -1,8 +1,17 @@
+open Chara_status
+
+
+let ($) f g x = f (g x);;
+
 let create ~phirc ~cid ~chid = 
   let chara = object (self)
     val cid = cid
     val phirc = phirc
     val chid = chid
+    val status =
+      Chara_status.create ~view:{hp = 5000; mhp = 5200; mp = 5100; mmp = 5500;
+                                 flv = 120; wlv = 1; mlv = 2; clv = 3;
+                                 state = Command; condition = []}
 
     method get_name = phirc
     method sight_change = function
@@ -65,6 +74,25 @@ let create ~phirc ~cid ~chid =
     method do_action =
       []
 
+    method hit =
+      let pos = Phi_map.get_chara_position ~chara_id:chid in
+      let adir = Phi_map.get_chara_absolute_direction ~chara_id:chid in
+      match Phi_map.get_neighbor_position ~pos ~adir with
+          None -> []
+        | Some front_pos -> [Event.Attack_to (chid, (front_pos, Combat.create ~attack_status:status))]
+
+    method defense ~combat:_ ~achid:_ =
+      []
+
+    method resolve_attack_result ~vsname ~result_list ~dchid:_ =
+      let name = self#get_name in
+      let result_to_message = function
+          Combat.Hp_damage value ->
+            Dm_message.make (Dm_message.Attack_hp (name, vsname, "knuckle", value))
+      in
+      ignore (List.map (self#send_message $ result_to_message) result_list);
+      []
+    
     method private send_message msg = Client_manager.send_message ~cid ~msg
     method private mapview_update =
       self#send_message (Protocol.encode_server_protocol (Protocol.M57Map (Phi_map.get_mapview ~chara_id:chid)))

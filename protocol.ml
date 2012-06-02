@@ -5,6 +5,7 @@ type raw_client_protocol =
     Raw_message of string
   | Go of Phi_map.direction
   | Turn of Phi_map.direction option
+  | Hit
 ;;
 
 type sharp_client_protocol =
@@ -48,6 +49,7 @@ let decode_raw_client_protocol protocol =
         | Some d -> Go d)
     | ["turn"] -> Turn None
     | ["turn"; dir] -> Turn (string_to_direction dir)
+    | ["hit"] -> Hit
     | _ -> Raw_message protocol
 ;;
 
