@@ -3,6 +3,7 @@ type raw_client_protocol =
   | Go of Phi_map.direction
   | Turn of Phi_map.direction option
   | Hit
+  | Get of Item.t option
 
 type sharp_client_protocol =
     Open of string

@@ -1,5 +1,6 @@
 open ExtList
 open ExtHashtbl
+open Item
 
 
 let ($) f g x = f (g x);;
@@ -13,7 +14,7 @@ let client_tbl = Hashtbl.create 100;;
 
 let execute_event = function
     Event.Client_message (cid, Protocol.Raw_client_protocol (Protocol.Raw_message msg)) ->
-(* tentative *)
+    (* tentative *)
     Client_manager.send_message ~cid ~msg;
     []
   | Event.Client_message (cid, Protocol.Raw_client_protocol (Protocol.Go dir)) ->
@@ -43,6 +44,31 @@ let execute_event = function
           chara#hit
       | _ -> []
     )     
+  | Event.Client_message (cid, Protocol.Raw_client_protocol (Protocol.Get item)) ->
+    (match Hashtbl.find_all client_tbl cid with
+        [chara_id] ->
+(*          let chara = Hashtbl.find chara_tbl chara_id in *)
+          (* tentative *)
+          let pos = Phi_map.get_chara_position ~chara_id in
+          (match item with
+              None ->
+                (match Phi_map.get_item_list_with_position ~pos with
+                    [] ->
+                      Client_manager.send_message ~cid ~msg:(Dm_message.make Dm_message.No_item_here);
+                      []
+                  | item_list ->
+                    ignore (List.map
+                              (fun item -> Client_manager.send_message ~cid
+                                ~msg:((Item.get_view ~item).name ^ ", "))
+                              item_list);
+                    []
+                )
+            | Some _ ->
+              [] (*tentative*)
+          )
+      | _ -> []
+    )
+    
 
   (* tentative: ignore duplicate open now *)
   | (Event.Client_message (cid, Protocol.Sharp_client_protocol (Protocol.Open phirc))) ->

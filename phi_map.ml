@@ -1,5 +1,6 @@
 open ExtHashtbl
 open ExtList
+open Item
 
 
 let ($) f g x = f (g x);;
@@ -16,18 +17,23 @@ type direction = Absolute_direction of absolute_direction | Relative_direction o
 
 type mapchip_view = Bars | Door | Dummy | Flower | Glass | Grass | Mist | Mwall | Pcircle | Road | Rock | Tgate | Unknown | Water | Window | Wood | Wwall | Door_lock | Pcircle_lock
 
-
-let phi_map =
-  ([|[|(Bars, []); (Door, []); (Flower, []); (Glass, []); (Grass, []); (Mist, []); (Mwall, [])|];
-     [|(Bars, []); (Door, []); (Flower, []); (Glass, []); (Grass, []); (Mist, []); (Mwall, [])|];
-     [|(Bars, []); (Door, []); (Flower, []); (Glass, []); (Grass, []); (Mist, []); (Mwall, [])|];
-     [|(Bars, []); (Door, []); (Flower, []); (Glass, []); (Grass, []); (Mist, []); (Mwall, [])|];
-     [|(Bars, []); (Door, []); (Flower, []); (Glass, []); (Grass, []); (Mist, []); (Mwall, [])|];
-     [|(Bars, []); (Door, []); (Flower, []); (Glass, []); (Grass, []); (Mist, []); (Mwall, [])|];
-     [|(Bars, []); (Door, []); (Flower, []); (Glass, []); (Grass, []); (Mist, []); (Mwall, [])|];|])
+(* for debug *)
+let item_debug =
+  Item.create ~view:(
+    {name = "test item"; attack_range = Item.Forth; material = Item.Steel; weapon_type = Item.Sword; atp = 10; item_type =Item.Weapon {element = Item.Fire; er = 30; effect = Item.EFNone; special_effect = Item.SENone}})
 ;;
 
-let chip_outer = (Unknown, []);;
+let phi_map =
+  ([|[|(Bars, ([], [])); (Door, ([], [item_debug])); (Flower, ([], [])); (Glass, ([], [])); (Grass, ([], [])); (Mist, ([], [])); (Mwall, ([], []))|];
+     [|(Bars, ([], [])); (Door, ([], [])); (Flower, ([], [])); (Glass, ([], [])); (Grass, ([], [])); (Mist, ([], [])); (Mwall, ([], []))|];
+     [|(Bars, ([], [])); (Door, ([], [])); (Flower, ([], [])); (Glass, ([], [])); (Grass, ([], [])); (Mist, ([], [])); (Mwall, ([], []))|];
+     [|(Bars, ([], [])); (Door, ([], [])); (Flower, ([], [])); (Glass, ([], [])); (Grass, ([], [])); (Mist, ([], [])); (Mwall, ([], []))|];
+     [|(Bars, ([], [])); (Door, ([], [])); (Flower, ([], [])); (Glass, ([], [])); (Grass, ([], [])); (Mist, ([], [])); (Mwall, ([], []))|];
+     [|(Bars, ([], [])); (Door, ([], [])); (Flower, ([], [])); (Glass, ([], [])); (Grass, ([], [])); (Mist, ([], [])); (Mwall, ([], []))|];
+     [|(Bars, ([], [])); (Door, ([], [])); (Flower, ([], [])); (Glass, ([], [])); (Grass, ([], [])); (Mist, ([], [])); (Mwall, ([], []))|];|])
+;;
+
+let chip_outer = (Unknown, ([], []));;
 
 let phi_map_width = 7;;
 
@@ -44,11 +50,11 @@ let set_chara_position ~chara_id ~pos =
   (match Hashtbl.find_all charaid_pos_tbl chara_id with
       [] -> ()
     | old_pos :: _ ->
-      let (ct, chara_list) = phi_map.(old_pos.py).(old_pos.px) in
-      phi_map.(old_pos.py).(old_pos.px) <- (ct, List.remove chara_list chara_id));
+      let (ct, (chara_list, item_list)) = phi_map.(old_pos.py).(old_pos.px) in
+      phi_map.(old_pos.py).(old_pos.px) <- (ct, (List.remove chara_list chara_id, item_list)));
   (match phi_map.(pos.py).(pos.px) with
-      (ct, chara_list) ->
-        phi_map.(pos.py).(pos.px) <- (ct, chara_id :: chara_list));
+      (ct, (chara_list, item_list)) ->
+        phi_map.(pos.py).(pos.px) <- (ct, (chara_id :: chara_list, item_list)));
   Hashtbl.replace charaid_pos_tbl chara_id pos
 ;;
 
@@ -162,13 +168,17 @@ let get_cansee_chara_list ~pos =
 ;;
 
 let get_chara_list_with_position ~pos =
-  snd phi_map.(pos.py).(pos.px)
+  fst (snd phi_map.(pos.py).(pos.px))
 ;;
 
 let delete_chara ~chara_id:chid =
   let pos = Hashtbl.find charaid_pos_tbl chid in
-  let map_chip = phi_map.(pos.py).(pos.px) in
-  phi_map.(pos.py).(pos.px) <- (fst map_chip, List.filter ((<>) chid) (snd map_chip));
+  let (ct, (chara_list, item_list)) = phi_map.(pos.py).(pos.px) in
+  phi_map.(pos.py).(pos.px) <- (ct, (List.filter ((<>) chid) chara_list, item_list));
   Hashtbl.remove charaid_pos_tbl chid;
   Hashtbl.remove charaid_dir_tbl chid
+;;
+
+let get_item_list_with_position ~pos =
+  snd (snd phi_map.(pos.py).(pos.px))
 ;;

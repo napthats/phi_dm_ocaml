@@ -3,6 +3,7 @@ type msg_type =
   | Turn_bad
   | Attack_hp of (string * string * string * int)
   | Kill_by of (string * string)
+  | No_item_here
 ;;
 
 let make = function
@@ -13,4 +14,5 @@ let make = function
     ^ ". [/*color=-hp*/" ^ (string_of_int value) ^ "/*.*/ hp]"
   | Kill_by (aname, dname) ->
     "DM > " ^ dname ^ " is killed by " ^ aname ^ "."
+  | No_item_here -> "DM > Here is no item."
 ;;

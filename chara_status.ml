@@ -8,12 +8,12 @@ type view =
      state : state; condition : condition list}
 ;;
 
-type view_diff = 
+(*type view_diff = 
     {dhp : int; dmhp : int; dmp : int; dmmp : int;
      dflv : int; dwlv : int; dmlv : int; dclv : int;
      state_change : bool;
      deleting_condition : condition list; adding_condition : condition list}
-;;
+;;*)
 
 type t = view;;
 
@@ -28,7 +28,7 @@ let add_hp ~hp:old_hp ~status =
 
 let is_dead ~status = status.hp <= 0 || status.mp <= 0;;
 
-let get_status_diff_view ~old_status ~new_status = 
+(*let get_status_diff_view ~old_status ~new_status = 
   let oview = get_view ~status:old_status in
   let nview = get_view ~status:new_status in
   {dhp = nview.hp - oview.hp; dmhp = nview.mhp - oview.mhp;
@@ -37,4 +37,4 @@ let get_status_diff_view ~old_status ~new_status =
    dmlv = nview.mlv - oview.mlv; dclv = nview.clv - oview.clv;
    state_change = false;
    deleting_condition = []; adding_condition = []}
-;;
+;;*)
