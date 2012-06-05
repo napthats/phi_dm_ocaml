@@ -63,12 +63,26 @@ let execute_event = function
                               item_list);
                     []
                 )
-            | Some _ ->
-              [] (*tentative*)
+            | Some target_name ->
+                (match Phi_map.get_item_list_with_position ~pos with
+                    [] ->
+                      Client_manager.send_message ~cid ~msg:(Dm_message.make Dm_message.Get_bad);
+                      []
+                  | item_list ->
+                    (match
+                        List.find_all (fun item -> (Item.get_view ~item).name = target_name) item_list
+                     with
+                         [] ->
+                         Client_manager.send_message ~cid ~msg:(Dm_message.make Dm_message.Get_bad);
+                         []
+                       | item :: _ ->
+                         let pc = Hashtbl.find chara_tbl chara_id in
+                         pc#get_item ~item
+                    )
+                )
           )
       | _ -> []
-    )
-    
+    )    
 
   (* tentative: ignore duplicate open now *)
   | (Event.Client_message (cid, Protocol.Sharp_client_protocol (Protocol.Open phirc))) ->

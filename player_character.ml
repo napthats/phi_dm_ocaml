@@ -12,6 +12,7 @@ let create ~phirc ~cid ~chid =
       Chara_status.create ~view:{hp = 5000; mhp = 5200; mp = 5100; mmp = 5500;
                                  flv = 120; wlv = 1; mlv = 2; clv = 3;
                                  state = Command; condition = []}
+    val mutable item_list = []
 
     method get_name = phirc
     method sight_change = function
@@ -98,6 +99,12 @@ let create ~phirc ~cid ~chid =
           Dm_message.make (Dm_message.Kill_by (aname, dname))
       in
       ignore (List.map (self#send_message $ result_to_message) result_list);
+      []
+
+    method get_item ~item =
+      self#send_message (Dm_message.make (Dm_message.Get (self#get_name, (Item.get_name ~item))));
+      item_list <- item :: item_list;
+      Phi_map.delete_item ~item ~pos:(Phi_map.get_chara_position ~chara_id:chid);
       []
     
     method private send_message msg = Client_manager.send_message ~cid ~msg

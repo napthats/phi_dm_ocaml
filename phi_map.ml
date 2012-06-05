@@ -20,7 +20,7 @@ type mapchip_view = Bars | Door | Dummy | Flower | Glass | Grass | Mist | Mwall 
 (* for debug *)
 let item_debug =
   Item.create ~view:(
-    {name = "test item"; attack_range = Item.Forth; material = Item.Steel; weapon_type = Item.Sword; atp = 10; item_type =Item.Weapon {element = Item.Fire; er = 30; effect = Item.EFNone; special_effect = Item.SENone}})
+    {name = "test item 1"; attack_range = Item.Forth; material = Item.Steel; weapon_type = Item.Sword; atp = 10; item_type =Item.Weapon {element = Item.Fire; er = 30; effect = Item.EFNone; special_effect = Item.SENone}})
 ;;
 
 let phi_map =
@@ -32,6 +32,10 @@ let phi_map =
      [|(Bars, ([], [])); (Door, ([], [])); (Flower, ([], [])); (Glass, ([], [])); (Grass, ([], [])); (Mist, ([], [])); (Mwall, ([], []))|];
      [|(Bars, ([], [])); (Door, ([], [])); (Flower, ([], [])); (Glass, ([], [])); (Grass, ([], [])); (Mist, ([], [])); (Mwall, ([], []))|];|])
 ;;
+
+let get_chip pos = phi_map.(pos.py).(pos.px);;
+
+let set_chip pos chip = phi_map.(pos.py).(pos.px) <- chip;;
 
 let chip_outer = (Unknown, ([], []));;
 
@@ -177,6 +181,11 @@ let delete_chara ~chara_id:chid =
   phi_map.(pos.py).(pos.px) <- (ct, (List.filter ((<>) chid) chara_list, item_list));
   Hashtbl.remove charaid_pos_tbl chid;
   Hashtbl.remove charaid_dir_tbl chid
+;;
+
+let delete_item ~pos ~item =
+  let (ct, (chara_list, item_list)) = get_chip pos in
+  set_chip pos (ct, (chara_list, List.remove item_list item))
 ;;
 
 let get_item_list_with_position ~pos =

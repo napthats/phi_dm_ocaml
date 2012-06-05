@@ -37,3 +37,7 @@ val get_item_list_with_position : pos:position -> Item.t list
 
 (* throw exeption if there is no chara with chara_id *)
 val delete_chara : chara_id:Chara_id.t -> unit
+
+(* delete first item on position *)
+(* throw exeption if there is no such item *)
+val delete_item : pos:position -> item:Item.t -> unit

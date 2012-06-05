@@ -23,3 +23,5 @@ type view =
 val create : view:view -> t
 
 val get_view : item:t -> view
+
+val get_name : item:t -> string

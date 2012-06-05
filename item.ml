@@ -26,3 +26,5 @@ type t = view;;
 let create ~view = view;;
 
 let get_view ~item = item;;
+
+let get_name ~item = item.name;;

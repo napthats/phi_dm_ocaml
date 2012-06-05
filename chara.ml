@@ -10,5 +10,7 @@ t = <get_name : string;
      do_action : Event.t list;
      hit : Event.t list;
      defense : combat:Combat.t -> achid:Chara_id.t -> Event.t list;
-     resolve_attack_result : result_list:Combat.result list -> dchid:Chara_id.t -> Event.t list>
+     resolve_attack_result : result_list:Combat.result list -> dchid:Chara_id.t -> Event.t list;
+     (* throw an exception if there is no such item *)
+     get_item : item:Item.t -> Event.t list>
 ;;

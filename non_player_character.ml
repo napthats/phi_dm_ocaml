@@ -60,6 +60,9 @@ let create ~chid =
 
     method resolve_attack_result ~result_list:_ ~dchid:_ =
       []
+
+    method get_item ~item:_ =
+      []
   end in
   let pos = Phi_map.get_default_position in (* tentative *)
   let adir = Phi_map.North in (* tentative *)
