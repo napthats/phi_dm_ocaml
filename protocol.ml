@@ -102,7 +102,7 @@ let absolute_direction_to_string = function
 (* for telnet *)
 let encode_server_protocol = function
     M57Map (adir, view_list) ->
-      absolute_direction_to_string adir
+(*      absolute_direction_to_string adir
       ^ (List.fold_left
            (fun line_acc line ->
              line_acc
@@ -114,5 +114,17 @@ let encode_server_protocol = function
            ""
            view_list
       )
-      ^ "\n"
+      ^ "\n"*)
+      "#m57 M " ^ (absolute_direction_to_string adir) ^ "        0:"
+      ^ (List.fold_left
+           (fun line_acc line ->
+             line_acc
+             ^ List.fold_left
+               (fun acc chip -> acc ^ mapchip_view_to_string chip ^ (String.make 1 (Char.chr 128)))
+               ""
+               line
+           )
+           ""
+           view_list
+      )
 ;;
