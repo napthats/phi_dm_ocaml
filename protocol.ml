@@ -7,6 +7,7 @@ type raw_client_protocol =
   | Turn of Phi_map.direction option
   | Hit
   | Get of string option
+  | Check
 ;;
 
 type sharp_client_protocol =
@@ -53,6 +54,7 @@ let decode_raw_client_protocol protocol =
     | ["hit"] -> Hit
     | ["get"] -> Get None
     | "get" :: name_list -> Get (Some (String.concat " " name_list))
+    | ["check"] -> Check
     | _ -> Raw_message protocol
 ;;
 

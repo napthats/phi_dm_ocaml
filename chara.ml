@@ -4,7 +4,10 @@ type sight_change_type =
   | Disappear_chara of (t * Phi_map.view_position)
 and
 t = <get_name : string;
+     get_status_view : Chara_status.view;
+     get_item_list : Item.t list;
      sight_change : sight_change_type -> Event.t list;
+     sight_update : Event.t list;
      turn : dir:Phi_map.direction -> Event.t list;
      go : dir:Phi_map.direction -> Event.t list;
      do_action : Event.t list;

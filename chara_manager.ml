@@ -44,6 +44,15 @@ let execute_event = function
           chara#hit
       | _ -> []
     )     
+  | Event.Client_message (cid, Protocol.Raw_client_protocol Protocol.Check) ->
+    (match Hashtbl.find_all client_tbl cid with
+        [chara_id] ->
+          let chara = Hashtbl.find chara_tbl chara_id in
+          Client_manager.send_message ~cid
+            ~msg:(Dm_message.make (Dm_message.Pc_status(chara#get_name, chara#get_status_view, List.map (fun item -> Item.get_name ~item) chara#get_item_list)));
+          chara#sight_update
+      | _ -> []
+    )    
   | Event.Client_message (cid, Protocol.Raw_client_protocol (Protocol.Get item)) ->
     (match Hashtbl.find_all client_tbl cid with
         [chara_id] ->

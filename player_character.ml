@@ -8,7 +8,7 @@ let create ~phirc ~cid ~chid =
     val cid = cid
     val phirc = phirc
     val chid = chid
-    val status =
+    val mutable status =
       Chara_status.create ~view:{hp = 5000; mhp = 5200; mp = 5100; mmp = 5500;
                                  flv = 120; wlv = 1; mlv = 2; clv = 3;
                                  state = Command; condition = []}
@@ -21,7 +21,7 @@ let create ~phirc ~cid ~chid =
             (String.concat ""
                ["appear "; chara#get_name;
                 " on "; string_of_int vpos.Phi_map.x; ":"; string_of_int vpos.Phi_map.y]);
-          self#mapview_update;
+          ignore (self#sight_update);
           []
       | Chara.Move_chara (chara, (ovpos, nvpos)) ->
         self#send_message
@@ -29,14 +29,14 @@ let create ~phirc ~cid ~chid =
              ["move "; chara#get_name;
               " on "; string_of_int ovpos.Phi_map.x; ":"; string_of_int ovpos.Phi_map.y;
               " to "; string_of_int nvpos.Phi_map.x; ":"; string_of_int nvpos.Phi_map.y]);
-          self#mapview_update;
+          ignore (self#sight_update);
         []
       | Chara.Disappear_chara (chara, vpos) ->
         self#send_message
           (String.concat ""
              ["dipappear "; chara#get_name;
               " on "; string_of_int vpos.Phi_map.x; ":"; string_of_int vpos.Phi_map.y]);
-          self#mapview_update;
+          ignore (self#sight_update);
         []
 
     method turn ~dir =
@@ -49,7 +49,7 @@ let create ~phirc ~cid ~chid =
         )
       in
       Phi_map.set_chara_direction ~chara_id:chid ~adir;
-      self#mapview_update;
+      ignore (self#sight_update);
       []
 
     method go ~dir =
@@ -69,7 +69,7 @@ let create ~phirc ~cid ~chid =
           let old_pos = Phi_map.get_chara_position ~chara_id:chid in
           let event = Event.Position_change (chid, (Some old_pos, Some next_pos)) in
           Phi_map.set_chara_position ~chara_id:chid ~pos:next_pos;
-          self#mapview_update;
+          ignore (self#sight_update);
           [event]
 
     method do_action =
@@ -106,16 +106,22 @@ let create ~phirc ~cid ~chid =
       item_list <- item :: item_list;
       Phi_map.delete_item ~item ~pos:(Phi_map.get_chara_position ~chara_id:chid);
       []
+
+    method get_status_view =
+      Chara_status.get_view ~status
+
+    method get_item_list =
+      item_list
     
     method private send_message msg = Client_manager.send_message ~cid ~msg
-    method private mapview_update =
-      self#send_message (Protocol.encode_server_protocol (Protocol.M57Map (Phi_map.get_mapview ~chara_id:chid)))
+    method sight_update =
+      self#send_message (Protocol.encode_server_protocol (Protocol.M57Map (Phi_map.get_mapview ~chara_id:chid)));
+      []
   end in
   let pos = Phi_map.get_default_position in (* tentative *)
   let adir = Phi_map.North in (* tentative *)
   Phi_map.set_chara_position ~chara_id:chid ~pos;
   Phi_map.set_chara_direction ~chara_id:chid ~adir;
-  (* for mapview_update *)
-  ignore (chara#sight_change (Chara.Appear_chara (chara, {Phi_map.x = 0; Phi_map.y = 0})));
+  ignore (chara#sight_update);
   chara
 ;;

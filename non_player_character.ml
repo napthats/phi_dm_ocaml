@@ -10,6 +10,7 @@ let create ~chid =
       Chara_status.create ~view:{hp = 300; mhp = 1200; mp = 100; mmp = 500;
                                  flv = 0; wlv = 1; mlv = 2; clv = 3;
                                  state = Command; condition = []}
+    val mutable item_list = []
 
     method get_name = "npc " ^ (string_of_int (Chara_id.to_num ~id:chid))
     method sight_change _ = []
@@ -63,6 +64,16 @@ let create ~chid =
 
     method get_item ~item:_ =
       []
+
+    method sight_update =
+      []
+
+    method get_status_view =
+      Chara_status.get_view ~status
+
+    method get_item_list =
+      item_list
+
   end in
   let pos = Phi_map.get_default_position in (* tentative *)
   let adir = Phi_map.North in (* tentative *)
