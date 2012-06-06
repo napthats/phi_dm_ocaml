@@ -148,6 +148,5 @@ let create ~phirc ~cid ~chid =
   let adir = Phi_map.North in (* tentative *)
   Phi_map.set_chara_position ~chara_id:chid ~pos;
   Phi_map.set_chara_direction ~chara_id:chid ~adir;
-  ignore (chara#sight_update);
   chara
 ;;

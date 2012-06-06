@@ -100,7 +100,8 @@ let execute_event = function
     let pc = Player_character.create ~phirc ~cid ~chid in
     Hashtbl.replace chara_tbl chid pc;
     Chara_name_cache.set_name ~chid ~name:pc#get_name;
-    [Event.Position_change (chid, (None, Some (Phi_map.get_chara_position ~chara_id:chid)))]
+    Event.Position_change (chid, (None, Some (Phi_map.get_chara_position ~chara_id:chid)))
+      :: pc#sight_update
   | (Event.Client_message (_, Protocol.Sharp_client_protocol (Protocol.Unknown))) ->
     []
 
