@@ -116,6 +116,7 @@ let create ~phirc ~cid ~chid =
     method private send_message msg = Client_manager.send_message ~cid ~msg
     method sight_update =
       self#send_message (Protocol.encode_server_protocol (Protocol.M57Map (Phi_map.get_mapview ~chara_id:chid)));
+      self#send_message (Protocol.encode_server_protocol Protocol.M57End);
       []
   end in
   let pos = Phi_map.get_default_position in (* tentative *)

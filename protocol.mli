@@ -18,5 +18,6 @@ val decode_client_protocol : string -> client_protocol
 
 type server_protocol =
     M57Map of (Phi_map.absolute_direction * ((Phi_map.mapchip_view list) list))
+  | M57End
 
 val encode_server_protocol : server_protocol -> string
