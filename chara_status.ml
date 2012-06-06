@@ -2,11 +2,16 @@ type state = Command;;
 
 type condition = Dummy;;
 
+
+module Open = struct
 type view = 
     {hp : int; mhp : int; mp : int; mmp : int;
      flv : int; wlv : int; mlv : int; clv : int;
      state : state; condition : condition list}
 ;;
+end;;
+
+include Open
 
 (*type view_diff = 
     {dhp : int; dmhp : int; dmp : int; dmmp : int;

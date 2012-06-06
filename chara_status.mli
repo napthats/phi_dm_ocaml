@@ -4,10 +4,16 @@ type state = Command
 
 type condition = Dummy
 
-type view = 
-    {hp : int; mhp : int; mp : int; mmp : int;
-     flv : int; wlv : int; mlv : int; clv : int;
-     state : state; condition : condition list}
+
+module Open :
+sig
+  type view = 
+      {hp : int; mhp : int; mp : int; mmp : int;
+       flv : int; wlv : int; mlv : int; clv : int;
+       state : state; condition : condition list}
+end
+
+type view = Open.view
 
 (* type view_diff = 
     {dhp : int; dmhp : int; dmp : int; dmmp : int;;

@@ -12,13 +12,20 @@ type effect = EFNone;;
 
 type special_effect = SENone;;
 
-type weapon_view = {element : element; er : int; effect : effect; special_effect : special_effect}
 
-type item_type = Weapon of weapon_view
+module Open =
+struct
+  type weapon_view = {element : element; er : int; effect : effect; special_effect : special_effect}
 
-type view =
-    {name : string; attack_range : attack_range; material : material; weapon_type : weapon_type;
-     atp : int; item_type : item_type}
+  type item_type = Weapon of weapon_view
+
+  type view =
+      {name : string; attack_range : attack_range; material : material; weapon_type : weapon_type;
+       atp : int; item_type : item_type}
+end;;
+
+include Open;;
+
 
 type t = view;;
 

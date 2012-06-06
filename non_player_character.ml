@@ -1,4 +1,4 @@
-open Chara_status
+open Chara_status.Open
 
 
 let adirs = [|Phi_map.North; Phi_map.East; Phi_map.West; Phi_map.South|];;
@@ -9,7 +9,7 @@ let create ~chid =
     val mutable status =
       Chara_status.create ~view:{hp = 300; mhp = 1200; mp = 100; mmp = 500;
                                  flv = 0; wlv = 1; mlv = 2; clv = 3;
-                                 state = Command; condition = []}
+                                 state = Chara_status.Command; condition = []}
     val mutable item_list = []
 
     method get_name = "npc " ^ (string_of_int (Chara_id.to_num ~id:chid))
@@ -55,7 +55,7 @@ let create ~chid =
     method defense ~combat ~achid =
       let (new_status, result_list) = combat status in
       status <- new_status;
-      if is_dead ~status
+      if Chara_status.is_dead ~status
       then [Event.Attack_result ((achid, chid), result_list); Event.Dead chid]
       else [Event.Attack_result ((achid, chid), result_list)]
 

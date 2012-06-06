@@ -1,4 +1,4 @@
-open Chara_status
+open Chara_status.Open
 
 
 type msg_type =

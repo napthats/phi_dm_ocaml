@@ -1,6 +1,6 @@
 open ExtHashtbl
 open ExtList
-open Item
+open Item.Open
 
 
 let ($) f g x = f (g x);;
@@ -17,31 +17,59 @@ type direction = Absolute_direction of absolute_direction | Relative_direction o
 
 type mapchip_view = Bars | Door | Dummy | Flower | Glass | Grass | Mist | Mwall | Pcircle | Road | Rock | Tgate | Unknown | Water | Window | Wood | Wwall | Door_lock | Pcircle_lock
 
-(* for debug *)
-let item_debug =
-  Item.create ~view:(
-    {name = "test item 1"; attack_range = Item.Forth; material = Item.Steel; weapon_type = Item.Sword; atp = 10; item_type =Item.Weapon {element = Item.Fire; er = 30; effect = Item.EFNone; special_effect = Item.SENone}})
+
+(* throw exception if posistion isn't valid *)
+module Map_data :
+sig
+  val get_chip_view : position -> mapchip_view
+  val set_chip_view : position -> mapchip_view -> unit
+  val get_chara_list : position -> Chara_id.t list
+  val set_chara_list : position -> Chara_id.t list -> unit
+  val get_item_list : position -> Item.t list
+  val set_item_list : position -> Item.t list -> unit
+  val is_valid_pos : position -> bool
+end
+=
+struct
+  let item_debug =
+      Item.create ~view:(
+        {name = "test item 1"; attack_range = Item.Forth; material = Item.Steel; weapon_type = Item.Sword; atp = 10; item_type =Item.Weapon {element = Item.Fire; er = 30; effect = Item.EFNone; special_effect = Item.SENone}})
+    ;;
+  let data =
+    ([|[|(Bars, ([], [])); (Door, ([], [item_debug])); (Flower, ([], [])); (Glass, ([], [])); (Grass, ([], [])); (Mist, ([], [])); (Mwall, ([], []))|];
+       [|(Bars, ([], [])); (Door, ([], [])); (Flower, ([], [])); (Glass, ([], [])); (Grass, ([], [])); (Mist, ([], [])); (Mwall, ([], []))|];
+       [|(Bars, ([], [])); (Door, ([], [])); (Flower, ([], [])); (Glass, ([], [])); (Grass, ([], [])); (Mist, ([], [])); (Mwall, ([], []))|];
+       [|(Bars, ([], [])); (Door, ([], [])); (Flower, ([], [])); (Glass, ([], [])); (Grass, ([], [])); (Mist, ([], [])); (Mwall, ([], []))|];
+       [|(Bars, ([], [])); (Door, ([], [])); (Flower, ([], [])); (Glass, ([], [])); (Grass, ([], [])); (Mist, ([], [])); (Mwall, ([], []))|];
+       [|(Bars, ([], [])); (Door, ([], [])); (Flower, ([], [])); (Glass, ([], [])); (Grass, ([], [])); (Mist, ([], [])); (Mwall, ([], []))|];
+       [|(Bars, ([], [])); (Door, ([], [])); (Flower, ([], [])); (Glass, ([], [])); (Grass, ([], [])); (Mist, ([], [])); (Mwall, ([], []))|];|])
+  ;;
+  let get_chip_view pos = fst data.(pos.py).(pos.px);;
+  let set_chip_view pos chip_view = 
+    let (_, lists) = data.(pos.py).(pos.px) in
+    data.(pos.py).(pos.px) <- (chip_view, lists)
+  ;;
+  let get_chara_list pos = fst (snd data.(pos.py).(pos.px));;
+  let set_chara_list pos chara_list = 
+    let (cv, (_, item_list)) = data.(pos.py).(pos.px) in
+    data.(pos.py).(pos.px) <- (cv, (chara_list, item_list))
+  ;;
+  let get_item_list pos = snd (snd data.(pos.py).(pos.px));;
+  let set_item_list pos item_list = 
+    let (cv, (chara_list, _)) = data.(pos.py).(pos.px) in
+    data.(pos.py).(pos.px) <- (cv, (chara_list, item_list))
+  ;;
+
+  let data_width = 7;;
+
+  let data_height = 7;;
+
+  let is_valid_pos pos =
+    pos.px >= 0 && pos.px < data_width && pos.py >= 0 && pos.py < data_height
+  ;;
+end
 ;;
 
-let phi_map =
-  ([|[|(Bars, ([], [])); (Door, ([], [item_debug])); (Flower, ([], [])); (Glass, ([], [])); (Grass, ([], [])); (Mist, ([], [])); (Mwall, ([], []))|];
-     [|(Bars, ([], [])); (Door, ([], [])); (Flower, ([], [])); (Glass, ([], [])); (Grass, ([], [])); (Mist, ([], [])); (Mwall, ([], []))|];
-     [|(Bars, ([], [])); (Door, ([], [])); (Flower, ([], [])); (Glass, ([], [])); (Grass, ([], [])); (Mist, ([], [])); (Mwall, ([], []))|];
-     [|(Bars, ([], [])); (Door, ([], [])); (Flower, ([], [])); (Glass, ([], [])); (Grass, ([], [])); (Mist, ([], [])); (Mwall, ([], []))|];
-     [|(Bars, ([], [])); (Door, ([], [])); (Flower, ([], [])); (Glass, ([], [])); (Grass, ([], [])); (Mist, ([], [])); (Mwall, ([], []))|];
-     [|(Bars, ([], [])); (Door, ([], [])); (Flower, ([], [])); (Glass, ([], [])); (Grass, ([], [])); (Mist, ([], [])); (Mwall, ([], []))|];
-     [|(Bars, ([], [])); (Door, ([], [])); (Flower, ([], [])); (Glass, ([], [])); (Grass, ([], [])); (Mist, ([], [])); (Mwall, ([], []))|];|])
-;;
-
-let get_chip pos = phi_map.(pos.py).(pos.px);;
-
-let set_chip pos chip = phi_map.(pos.py).(pos.px) <- chip;;
-
-let chip_outer = (Unknown, ([], []));;
-
-let phi_map_width = 7;;
-
-let phi_map_height = 7;;
 
 let charaid_pos_tbl = Hashtbl.create 100;;
 
@@ -54,11 +82,10 @@ let set_chara_position ~chara_id ~pos =
   (match Hashtbl.find_all charaid_pos_tbl chara_id with
       [] -> ()
     | old_pos :: _ ->
-      let (ct, (chara_list, item_list)) = phi_map.(old_pos.py).(old_pos.px) in
-      phi_map.(old_pos.py).(old_pos.px) <- (ct, (List.remove chara_list chara_id, item_list)));
-  (match phi_map.(pos.py).(pos.px) with
-      (ct, (chara_list, item_list)) ->
-        phi_map.(pos.py).(pos.px) <- (ct, (chara_id :: chara_list, item_list)));
+      let chara_list = Map_data.get_chara_list old_pos in
+      Map_data.set_chara_list old_pos (List.remove chara_list chara_id));
+  let chara_list = Map_data.get_chara_list pos in
+  Map_data.set_chara_list pos (chara_id :: chara_list);
   Hashtbl.replace charaid_pos_tbl chara_id pos
 ;;
 
@@ -90,14 +117,11 @@ let adir_to_offset = function
   | South -> (0, 1)
 ;;
 
-let is_position_valid pos =
-  pos.px >= 0 && pos.px < phi_map_width && pos.py >= 0 && pos.py < phi_map_height
-;;
 
 let get_neighbor_position ~pos ~adir =
   let offset = adir_to_offset adir in
   let new_pos = {px = pos.px + (fst offset); py = pos.py + (snd offset)} in
-  if is_position_valid new_pos
+  if Map_data.is_valid_pos new_pos
   then Some new_pos
   else None
 ;;
@@ -114,13 +138,6 @@ let get_chara_absolute_direction ~chara_id =
       [] -> assert false
     | [dir] -> dir
     | _ -> assert false
-;;
-
-
-let get_chip_with_outer pos =
-  if is_position_valid pos
-  then phi_map.(pos.py).(pos.px)
-  else chip_outer
 ;;
 
 let normal_sight_offset =
@@ -145,7 +162,11 @@ let get_mapview ~chara_id =
   let pos = Hashtbl.find charaid_pos_tbl chara_id in
   let view =
     List.map
-      (List.map (fun (ox, oy) ->  fst (get_chip_with_outer ({px = pos.px + ox; py = pos.py + oy}))))
+      (List.map (fun (ox, oy) ->
+        let p = {px = pos.px + ox; py = pos.py + oy} in
+        if Map_data.is_valid_pos p
+        then Map_data.get_chip_view p
+        else Unknown))
       (get_normal_sight_offset dir)
   in
   (dir, view)
@@ -172,22 +193,22 @@ let get_cansee_chara_list ~pos =
 ;;
 
 let get_chara_list_with_position ~pos =
-  fst (snd phi_map.(pos.py).(pos.px))
+  Map_data.get_chara_list pos
 ;;
 
 let delete_chara ~chara_id:chid =
   let pos = Hashtbl.find charaid_pos_tbl chid in
-  let (ct, (chara_list, item_list)) = phi_map.(pos.py).(pos.px) in
-  phi_map.(pos.py).(pos.px) <- (ct, (List.filter ((<>) chid) chara_list, item_list));
+  let chara_list = Map_data.get_chara_list pos in
+  Map_data.set_chara_list pos (List.remove chara_list chid);
   Hashtbl.remove charaid_pos_tbl chid;
   Hashtbl.remove charaid_dir_tbl chid
 ;;
 
 let delete_item ~pos ~item =
-  let (ct, (chara_list, item_list)) = get_chip pos in
-  set_chip pos (ct, (chara_list, List.remove item_list item))
+  let item_list = Map_data.get_item_list pos in
+  Map_data.set_item_list pos (List.remove item_list item)
 ;;
 
 let get_item_list_with_position ~pos =
-  snd (snd phi_map.(pos.py).(pos.px))
+  Map_data.get_item_list pos
 ;;

@@ -1,4 +1,4 @@
-open Chara_status
+open Chara_status.Open
 
 
 let ($) f g x = f (g x);;
@@ -11,7 +11,7 @@ let create ~phirc ~cid ~chid =
     val mutable status =
       Chara_status.create ~view:{hp = 5000; mhp = 5200; mp = 5100; mmp = 5500;
                                  flv = 120; wlv = 1; mlv = 2; clv = 3;
-                                 state = Command; condition = []}
+                                 state = Chara_status.Command; condition = []}
     val mutable item_list = []
 
     method get_name = phirc
