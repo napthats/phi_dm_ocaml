@@ -3,6 +3,8 @@ open Chara_status.Open
 
 let ($) f g x = f (g x);;
 
+let client_map_center = (3, 4);;
+
 let create ~phirc ~cid ~chid = 
   let chara = object (self)
     val cid = cid
@@ -115,8 +117,31 @@ let create ~phirc ~cid ~chid =
     
     method private send_message msg = Client_manager.send_message ~cid ~msg
     method sight_update =
-      self#send_message (Protocol.encode_server_protocol (Protocol.M57Map (Phi_map.get_mapview ~chara_id:chid)));
-      self#send_message (Protocol.encode_server_protocol Protocol.M57End);
+      self#send_message (Protocol.encode_server_protocol (Protocol.M57_map (Phi_map.get_mapview ~chara_id:chid)));
+      let chara_id_list = Phi_map.get_chara_in_sight_list ~chara_id:chid in
+      let chara_name_list =
+        List.map
+          (fun (id, vp, rdir) -> (
+            (match (Chara_name_cache.get_name ~chid:id) with None -> "????" | Some name -> name),
+            vp,
+            rdir)
+          )
+          chara_id_list
+      in
+      ignore (List.map
+        (fun (name, vp, rdir) ->
+          self#send_message
+            (Protocol.encode_server_protocol
+               (Protocol.M57_obj 
+                  (Protocol.C_obj,
+                   ((fst client_map_center) + vp.Phi_map.x),
+                   ((snd client_map_center) + vp.Phi_map.y),
+                   rdir,
+                   name))
+            )
+        )
+        chara_name_list);
+      self#send_message (Protocol.encode_server_protocol Protocol.M57_end);
       []
   end in
   let pos = Phi_map.get_default_position in (* tentative *)

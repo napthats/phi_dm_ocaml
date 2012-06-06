@@ -66,9 +66,12 @@ let decode_client_protocol protocol =
 ;;
 
 
+type object_type = B_obj | C_obj | F_obj;;
+
 type server_protocol =
-    M57Map of (Phi_map.absolute_direction * ((Phi_map.mapchip_view list) list))
-  | M57End
+    M57_map of (Phi_map.absolute_direction * ((Phi_map.mapchip_view list) list))
+  | M57_obj of (object_type * int * int * Phi_map.relative_direction * string)
+  | M57_end
 ;;
 
 let mapchip_view_to_string = function
@@ -102,8 +105,25 @@ let absolute_direction_to_string = function
 
 (* for telnet *)
 let encode_server_protocol = function
-    M57End -> "#m57 ."
-  | M57Map (adir, view_list) ->
+    M57_end -> "#m57 ."
+  | M57_obj (otype, x, y, rdir, name) ->
+    let otype_string =
+      (match otype with
+          B_obj -> "B"
+        | C_obj -> "C"
+        | F_obj -> "F")
+    in
+    let dir_string =
+      (match rdir with
+          Phi_map.Forth -> "F"
+        | Phi_map.Right -> "R"
+        | Phi_map.Left -> "L"
+        | Phi_map.Back -> "B")
+    in
+    Printf.sprintf
+      "#m57 O %s0000:%d %d %s %-31s 00                 # 00"
+      otype_string x y dir_string name
+  | M57_map (adir, view_list) ->
 (*      absolute_direction_to_string adir
       ^ (List.fold_left
            (fun line_acc line ->

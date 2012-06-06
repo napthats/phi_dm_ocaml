@@ -212,3 +212,45 @@ let delete_item ~pos ~item =
 let get_item_list_with_position ~pos =
   Map_data.get_item_list pos
 ;;
+
+let get_rdir_between_adir = function
+    (North, North) -> Back
+  | (North, East) -> Right
+  | (North, West) -> Left
+  | (North, South) -> Forth
+  | (East, North) -> Left
+  | (East, East) -> Back
+  | (East, West) -> Forth
+  | (East, South) -> Right
+  | (West, North) -> Right
+  | (West, East) -> Forth
+  | (West, West) -> Back
+  | (West, South) -> Left
+  | (South, North) -> Forth
+  | (South, East) -> Left
+  | (South, West) -> Right
+  | (South, South) -> Back
+;;
+
+let get_chara_in_sight_list ~chara_id:chid =
+  let pos = Hashtbl.find charaid_pos_tbl chid in
+  let dir = Hashtbl.find charaid_dir_tbl chid in
+  let sight_offset_list = List.concat (get_normal_sight_offset dir) in
+  let sight_pos_list =
+    List.map (fun (ox, oy) -> {px = pos.px + ox; py = pos.py + oy}) sight_offset_list
+  in
+  List.concat (List.map
+    (fun (pos, (vx, vy)) ->
+      if Map_data.is_valid_pos pos
+      then
+        List.map
+          (fun chara_id ->
+            (chara_id,
+             {x = vx; y= vy},
+             get_rdir_between_adir (dir, (Hashtbl.find charaid_dir_tbl chara_id)))
+          )
+          (Map_data.get_chara_list pos)
+      else []
+    )
+    (List.combine sight_pos_list (List.concat normal_sight_offset)))
+;;
