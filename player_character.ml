@@ -6,17 +6,19 @@ let ($) f g x = f (g x);;
 let client_map_center = (3, 4);;
 
 let create ~phirc ~cid ~chid = 
+  match Player_character_db.load phirc with
+      None -> None
+    | Some (name, pos, adir, status, item_list) ->
+
   let chara = object (self)
     val cid = cid
     val phirc = phirc
     val chid = chid
     val mutable status =
-      Chara_status.create ~view:{hp = 5000; mhp = 5200; mp = 5100; mmp = 5500;
-                                 flv = 120; wlv = 1; mlv = 2; clv = 3;
-                                 state = Chara_status.Command; condition = []}
-    val mutable item_list = []
+      Chara_status.create ~view:status
+    val mutable item_list = item_list
 
-    method get_name = phirc
+    method get_name = name
     method sight_change = function
         Chara.Appear_chara (chara, vpos) ->
           self#send_message
@@ -144,9 +146,7 @@ let create ~phirc ~cid ~chid =
       self#send_message (Protocol.encode_server_protocol Protocol.M57_end);
       []
   end in
-  let pos = Phi_map.get_default_position in (* tentative *)
-  let adir = Phi_map.North in (* tentative *)
   Phi_map.set_chara_position ~chara_id:chid ~pos;
   Phi_map.set_chara_direction ~chara_id:chid ~adir;
-  chara
+  Some chara
 ;;

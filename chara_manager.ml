@@ -97,11 +97,15 @@ let execute_event = function
   | (Event.Client_message (cid, Protocol.Sharp_client_protocol (Protocol.Open phirc))) ->
     let chid = Chara_id.get_next_chara_id () in
     Hashtbl.replace client_tbl cid chid;
-    let pc = Player_character.create ~phirc ~cid ~chid in
-    Hashtbl.replace chara_tbl chid pc;
-    Chara_name_cache.set_name ~chid ~name:pc#get_name;
-    Event.Position_change (chid, (None, Some (Phi_map.get_chara_position ~chara_id:chid)))
-      :: pc#sight_update
+    (match Player_character.create ~phirc ~cid ~chid with
+        None ->
+        Client_manager.send_message ~cid ~msg:(Dm_message.make Dm_message.No_character);
+        []
+      | Some pc ->
+        Hashtbl.replace chara_tbl chid pc;
+        Chara_name_cache.set_name ~chid ~name:pc#get_name;
+        Event.Position_change (chid, (None, Some (Phi_map.get_chara_position ~chara_id:chid)))
+        :: pc#sight_update)
   | (Event.Client_message (_, Protocol.Sharp_client_protocol (Protocol.Unknown))) ->
     []
 
