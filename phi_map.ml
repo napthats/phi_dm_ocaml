@@ -201,7 +201,7 @@ let delete_chara ~chara_id:chid =
   let chara_list = Map_data.get_chara_list pos in
   Map_data.set_chara_list pos (List.remove chara_list chid);
   Hashtbl.remove charaid_pos_tbl chid;
-  Hashtbl.remove charaid_dir_tbl chid
+  Hashtbl.remove charaid_dir_tbl chid;
 ;;
 
 let delete_item ~pos ~item =

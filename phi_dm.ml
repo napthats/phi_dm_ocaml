@@ -6,9 +6,6 @@ let rec main_loop event_list prev_time =
       ~event_list:(List.concat [event_list; client_message_event_list; clock_event_list])
   in
   Thread.delay (max 0.0 (0.1 -. ((Sys.time ()) -. prev_time)));
-  print_endline "-----------------";
-  print_endline (string_of_float (max 0.0 (0.1 -. ((Sys.time ()) -. prev_time))));
-  print_endline (string_of_float (Sys.time ()));
   main_loop event_list (Sys.time ())
 ;;
 

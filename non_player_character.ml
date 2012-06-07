@@ -7,7 +7,7 @@ let create ~chid =
   let chara = object (self)
     val chid = chid
     val mutable status =
-      Chara_status.create ~view:{hp = 300; mhp = 1200; mp = 100; mmp = 500;
+      Chara_status.create ~view:{hp = 100; mhp = 1200; mp = 100; mmp = 500;
                                  flv = 0; wlv = 1; mlv = 2; clv = 3;
                                  state = Chara_status.Command; condition = []}
     val mutable item_list = []

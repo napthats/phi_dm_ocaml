@@ -132,6 +132,9 @@ let execute_event = function
     []
 
   | (Event.Position_change (chid, (maybe_old_pos, maybe_new_pos))) ->
+    if Hashtbl.find_all chara_tbl chid = []
+    then []
+    else
     let target_chara = Hashtbl.find chara_tbl chid in
     let cansee_old_chara_list =
       match maybe_old_pos with
