@@ -5,6 +5,7 @@ type raw_client_protocol =
   | Hit
   | Get of string option
   | Check
+  | Exit
 
 type sharp_client_protocol =
     Open of string

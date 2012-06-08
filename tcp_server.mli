@@ -5,5 +5,5 @@ class tcp_server :
     method get_each_client_messages : (client_id * string) list
     method listen : unit
     method send_message_to : cid:client_id -> msg:string -> unit
+    method disconnect_client : cid:client_id -> unit
   end
-

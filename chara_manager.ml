@@ -17,6 +17,25 @@ let execute_event = function
     (* tentative *)
     Client_manager.send_message ~cid ~msg;
     []
+  | Event.Client_message (cid, Protocol.Raw_client_protocol Protocol.Exit) ->
+    (match Hashtbl.find_all client_tbl cid with
+        [chara_id] ->
+          let chara = Hashtbl.find chara_tbl chara_id in
+          let pos = Phi_map.get_chara_position ~chara_id in
+          let adir = Phi_map.get_chara_absolute_direction ~chara_id in
+          let phirc =
+            match chara#get_phirc with
+                None -> assert false
+              | Some x -> x
+          in
+          Player_character_db.save ~name:chara#get_name ~phirc ~pos ~adir ~status:chara#get_status_view ~item_list:chara#get_item_list;
+          Client_manager.disconnect ~cid;
+          Hashtbl.remove chara_tbl chara_id;          
+          Phi_map.delete_chara ~chara_id;
+          Hashtbl.remove client_tbl cid;
+          [Event.Position_change (chara_id, (Some pos, None))]
+      | _ -> []
+    )
   | Event.Client_message (cid, Protocol.Raw_client_protocol (Protocol.Go dir)) ->
     (match Hashtbl.find_all client_tbl cid with
         [chara_id] ->
@@ -49,7 +68,15 @@ let execute_event = function
         [chara_id] ->
           let chara = Hashtbl.find chara_tbl chara_id in
           Client_manager.send_message ~cid
-            ~msg:(Dm_message.make (Dm_message.Pc_status(chara#get_name, chara#get_status_view, List.map (fun item -> Item.get_name ~item) chara#get_item_list)));
+            ~msg:(
+              Dm_message.make (
+                Dm_message.Pc_status(
+                  chara#get_name,
+                  chara#get_status_view,
+                  List.map (fun item -> Item.get_name ~item) chara#get_item_list
+                )
+              )
+            );
           chara#sight_update
       | _ -> []
     )    
@@ -63,7 +90,8 @@ let execute_event = function
               None ->
                 (match Phi_map.get_item_list_with_position ~pos with
                     [] ->
-                      Client_manager.send_message ~cid ~msg:(Dm_message.make Dm_message.No_item_here);
+                      Client_manager.send_message ~cid ~msg:
+                        (Dm_message.make Dm_message.No_item_here);
                       []
                   | item_list ->
                     ignore (List.map
@@ -75,14 +103,18 @@ let execute_event = function
             | Some target_name ->
                 (match Phi_map.get_item_list_with_position ~pos with
                     [] ->
-                      Client_manager.send_message ~cid ~msg:(Dm_message.make Dm_message.Get_bad);
+                      Client_manager.send_message ~cid ~msg:
+                        (Dm_message.make Dm_message.Get_bad);
                       []
                   | item_list ->
                     (match
-                        List.find_all (fun item -> (Item.get_view ~item).name = target_name) item_list
+                        List.find_all 
+                          (fun item -> (Item.get_view ~item).name = target_name)
+                          item_list
                      with
                          [] ->
-                         Client_manager.send_message ~cid ~msg:(Dm_message.make Dm_message.Get_bad);
+                         Client_manager.send_message ~cid ~msg:
+                           (Dm_message.make Dm_message.Get_bad);
                          []
                        | item :: _ ->
                          let pc = Hashtbl.find chara_tbl chara_id in

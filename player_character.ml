@@ -6,7 +6,7 @@ let ($) f g x = f (g x);;
 let client_map_center = (3, 4);;
 
 let create ~phirc ~cid ~chid = 
-  match Player_character_db.load phirc with
+  match Player_character_db.load ~phirc with
       None -> None
     | Some (name, pos, adir, status, item_list) ->
 
@@ -19,6 +19,7 @@ let create ~phirc ~cid ~chid =
     val mutable item_list = item_list
 
     method get_name = name
+    method get_phirc = Some phirc
     method sight_change = function
         Chara.Appear_chara (chara, vpos) ->
           self#send_message

@@ -8,24 +8,21 @@ type raw_client_protocol =
   | Hit
   | Get of string option
   | Check
-;;
+  | Exit
 
 type sharp_client_protocol =
     Open of string
   | Unknown
-;;
 
 type client_protocol =
     Raw_client_protocol of raw_client_protocol
   | Sharp_client_protocol of sharp_client_protocol
-;;
 
 
 let decode_sharp_client_protocol protocol =
   match String.nsplit protocol " " with
       ["open"; phirc] -> Open phirc
     | _ -> Unknown
-;;
 
 let string_to_direction = function
     "" -> None
@@ -40,7 +37,6 @@ let string_to_direction = function
       | 'l' -> Some (Phi_map.Relative_direction Phi_map.Left)
       | 'b' -> Some (Phi_map.Relative_direction Phi_map.Back)
       | _ -> None
-;;
 
 let decode_raw_client_protocol protocol =
   match String.nsplit protocol " " with
@@ -55,15 +51,14 @@ let decode_raw_client_protocol protocol =
     | ["get"] -> Get None
     | "get" :: name_list -> Get (Some (String.concat " " name_list))
     | ["check"] -> Check
+    | ["exit"] -> Exit
     | _ -> Raw_message protocol
-;;
 
 
 let decode_client_protocol protocol =
   if protocol.[0] = '#'
   then Sharp_client_protocol (decode_sharp_client_protocol (String.lchop protocol))
   else Raw_client_protocol (decode_raw_client_protocol protocol)
-;;
 
 
 type object_type = B_obj | C_obj | F_obj;;
@@ -72,7 +67,6 @@ type server_protocol =
     M57_map of (Phi_map.absolute_direction * ((Phi_map.mapchip_view list) list))
   | M57_obj of (object_type * int * int * Phi_map.relative_direction * string)
   | M57_end
-;;
 
 let mapchip_view_to_string = function
     Phi_map.Bars -> "I"
@@ -94,16 +88,13 @@ let mapchip_view_to_string = function
   | Phi_map.Wwall -> "#"
   | Phi_map.Door_lock -> "{"
   | Phi_map.Pcircle_lock -> "#"
-;;
 
 let absolute_direction_to_string = function
     Phi_map.North -> "N"
   | Phi_map.East -> "E"
   | Phi_map.West -> "W"
   | Phi_map.South -> "S"
-;;
 
-(* for telnet *)
 let encode_server_protocol = function
     M57_end -> "#m57 ."
   | M57_obj (otype, x, y, rdir, name) ->
@@ -149,4 +140,3 @@ let encode_server_protocol = function
            ""
            view_list
       )
-;;

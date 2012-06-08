@@ -14,6 +14,7 @@ let create ~chid =
 
     method get_name = "npc " ^ (string_of_int (Chara_id.to_num ~id:chid))
     method sight_change _ = []
+    method get_phirc = None
 
     method turn ~dir =
       let adir =
