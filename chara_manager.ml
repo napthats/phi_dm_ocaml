@@ -127,6 +127,20 @@ let execute_event = function
 
   (* tentative: ignore duplicate open now *)
   | (Event.Client_message (cid, Protocol.Sharp_client_protocol (Protocol.Open phirc))) ->
+    if List.exists
+      (fun chara -> 
+        match chara#get_phirc with
+            None -> false
+          | Some p -> phirc = p
+      )
+      (List.map snd (List.of_enum (Hashtbl.enum chara_tbl)))
+    then
+    (Client_manager.send_message ~cid ~msg:
+      (Dm_message.make Dm_message.AccessAlready);
+    Client_manager.send_message ~cid ~msg:
+      (Dm_message.make Dm_message.ChangeClientFail);  
+    [])
+    else
     let chid = Chara_id.get_next_chara_id () in
     Hashtbl.replace client_tbl cid chid;
     (match Player_character.create ~phirc ~cid ~chid with
