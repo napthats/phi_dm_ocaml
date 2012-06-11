@@ -6,6 +6,7 @@ and
 t = <get_name : string;
      get_status_view : Chara_status.view;
      get_item_list : Item.t list;
+     get_chara_id : Chara_id.t;
      sight_change : sight_change_type -> Event.t list;
      sight_update : Event.t list;
      turn : dir:Phi_map.direction -> Event.t list;
@@ -16,5 +17,5 @@ t = <get_name : string;
      resolve_attack_result : result_list:Combat.result list -> dchid:Chara_id.t -> Event.t list;
      (* throw an exception if there is no such item *)
      item_get : item:Item.t -> Event.t list;
-     get_phirc : string option>
-;;
+     dead : Event.t list>
+

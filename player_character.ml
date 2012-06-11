@@ -1,6 +1,26 @@
 open Chara_status.Open
 
 
+type t = 
+    <get_name : string;
+  get_status_view : Chara_status.view;
+  get_item_list : Item.t list;
+  get_chara_id : Chara_id.t;
+  sight_change : Chara.sight_change_type -> Event.t list;
+  sight_update : Event.t list;
+  turn : dir:Phi_map.direction -> Event.t list;
+  go : dir:Phi_map.direction -> Event.t list;
+  do_action : Event.t list;
+  hit : Event.t list;
+  defense : combat:Combat.t -> achid:Chara_id.t -> Event.t list;
+  resolve_attack_result : result_list:Combat.result list -> dchid:Chara_id.t -> Event.t list;
+     (* throw an exception if there is no such item *)
+  item_get : item:Item.t -> Event.t list;
+  dead : Event.t list;
+
+  get_phirc : string>
+
+
 let ($) f g x = f (g x);;
 
 let client_map_center = (3, 4);;
@@ -19,7 +39,8 @@ let create ~phirc ~cid ~chid =
     val mutable item_list = item_list
 
     method get_name = name
-    method get_phirc = Some phirc
+    method get_phirc = phirc
+    method get_chara_id = chid
     method sight_change = function
         Chara.Appear_chara (_, _) ->
           ignore (self#sight_update);
@@ -74,7 +95,30 @@ let create ~phirc ~cid ~chid =
           None -> []
         | Some front_pos -> [Event.Attack_to (chid, (front_pos, Combat.create ~attack_status:status))]
 
-    method defense ~combat:_ ~achid:_ =
+    method private send_attack_messages aname dname result_list =
+      let result_to_message = function
+          Combat.Hp_damage value ->
+          Dm_message.make (Dm_message.Attack_hp (aname, dname, "knuckle", value))
+        | Combat.Kill ->
+          Dm_message.make (Dm_message.Kill_by (aname, dname))
+      in
+      ignore (List.map (self#send_message $ result_to_message) result_list);      
+
+    method defense ~combat ~achid =
+      let (new_status, result_list) = combat status in
+      status <- new_status;
+      let dname = self#get_name in
+      let aname =
+        match Chara_name_cache.get_name ~chid:achid with
+            None -> "????"
+          | Some n -> n
+      in
+      self#send_attack_messages aname dname result_list;
+      if Chara_status.is_dead ~status
+      then [Event.Attack_result ((achid, chid), result_list); Event.Dead chid]
+      else [Event.Attack_result ((achid, chid), result_list)]
+
+    method dead =
       []
 
     method resolve_attack_result ~result_list ~dchid =
@@ -84,13 +128,7 @@ let create ~phirc ~cid ~chid =
             None -> "????"
           | Some n -> n
       in
-      let result_to_message = function
-          Combat.Hp_damage value ->
-          Dm_message.make (Dm_message.Attack_hp (aname, dname, "knuckle", value))
-        | Combat.Kill ->
-          Dm_message.make (Dm_message.Kill_by (aname, dname))
-      in
-      ignore (List.map (self#send_message $ result_to_message) result_list);
+      self#send_attack_messages aname dname result_list;
       []
 
     method item_get ~item =
@@ -136,5 +174,6 @@ let create ~phirc ~cid ~chid =
   end in
   Phi_map.set_chara_position ~chara_id:chid ~pos;
   Phi_map.set_chara_direction ~chara_id:chid ~adir;
+  Chara_name_cache.set_name ~chid ~name:chara#get_name;
   Some chara
 ;;
