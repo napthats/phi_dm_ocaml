@@ -21,26 +21,13 @@ let create ~phirc ~cid ~chid =
     method get_name = name
     method get_phirc = Some phirc
     method sight_change = function
-        Chara.Appear_chara (chara, vpos) ->
-          self#send_message
-            (String.concat ""
-               ["appear "; chara#get_name;
-                " on "; string_of_int vpos.Phi_map.x; ":"; string_of_int vpos.Phi_map.y]);
+        Chara.Appear_chara (_, _) ->
           ignore (self#sight_update);
           []
-      | Chara.Move_chara (chara, (ovpos, nvpos)) ->
-        self#send_message
-          (String.concat ""
-             ["move "; chara#get_name;
-              " on "; string_of_int ovpos.Phi_map.x; ":"; string_of_int ovpos.Phi_map.y;
-              " to "; string_of_int nvpos.Phi_map.x; ":"; string_of_int nvpos.Phi_map.y]);
+      | Chara.Move_chara (_, (_, _)) ->
           ignore (self#sight_update);
         []
-      | Chara.Disappear_chara (chara, vpos) ->
-        self#send_message
-          (String.concat ""
-             ["dipappear "; chara#get_name;
-              " on "; string_of_int vpos.Phi_map.x; ":"; string_of_int vpos.Phi_map.y]);
+      | Chara.Disappear_chara (_, _) ->
           ignore (self#sight_update);
         []
 
@@ -106,7 +93,7 @@ let create ~phirc ~cid ~chid =
       ignore (List.map (self#send_message $ result_to_message) result_list);
       []
 
-    method get_item ~item =
+    method item_get ~item =
       self#send_message (Dm_message.make (Dm_message.Get (self#get_name, (Item.get_name ~item))));
       item_list <- item :: item_list;
       Phi_map.delete_item ~item ~pos:(Phi_map.get_chara_position ~chara_id:chid);

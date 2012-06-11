@@ -63,7 +63,7 @@ let create ~chid =
     method resolve_attack_result ~result_list:_ ~dchid:_ =
       []
 
-    method get_item ~item:_ =
+    method item_get ~item:_ =
       []
 
     method sight_update =

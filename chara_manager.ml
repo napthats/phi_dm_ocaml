@@ -20,6 +20,10 @@ let execute_event = function
   | Event.Client_message (cid, Protocol.Raw_client_protocol Protocol.Exit) ->
     (match Hashtbl.find_all client_tbl cid with
         [chara_id] ->
+          Client_manager.send_message ~cid ~msg:
+            (Dm_message.make Dm_message.Savedata);
+          Client_manager.send_message ~cid ~msg:
+            (Dm_message.make Dm_message.Seeyou);
           let chara = Hashtbl.find chara_tbl chara_id in
           let pos = Phi_map.get_chara_position ~chara_id in
           let adir = Phi_map.get_chara_absolute_direction ~chara_id in
@@ -118,7 +122,7 @@ let execute_event = function
                          []
                        | item :: _ ->
                          let pc = Hashtbl.find chara_tbl chara_id in
-                         pc#get_item ~item
+                         pc#item_get ~item
                     )
                 )
           )
@@ -136,9 +140,9 @@ let execute_event = function
       (List.map snd (List.of_enum (Hashtbl.enum chara_tbl)))
     then
     (Client_manager.send_message ~cid ~msg:
-      (Dm_message.make Dm_message.AccessAlready);
+      (Dm_message.make Dm_message.Access_already);
     Client_manager.send_message ~cid ~msg:
-      (Dm_message.make Dm_message.ChangeClientFail);  
+      (Dm_message.make Dm_message.Change_client_fail);  
     [])
     else
     let chid = Chara_id.get_next_chara_id () in
