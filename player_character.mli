@@ -14,6 +14,8 @@ type t =
      (* throw an exception if there is no such item *)
   item_get : item:Item.t -> Event.t list;
   dead : Event.t list;
+  say : msg:string -> Event.t list;
+  listen : msg:string -> achid:Chara_id.t -> Event.t list;
 
   get_phirc : string>
 

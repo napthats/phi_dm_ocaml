@@ -1,6 +1,7 @@
 open Chara_status.Open
 
 
+
 type t = 
     <get_name : string;
   get_status_view : Chara_status.view;
@@ -17,6 +18,8 @@ type t =
      (* throw an exception if there is no such item *)
   item_get : item:Item.t -> Event.t list;
   dead : Event.t list;
+  say : msg:string -> Event.t list;
+  listen : msg:string -> achid:Chara_id.t -> Event.t list;
 
   get_phirc : string>
 
@@ -87,6 +90,18 @@ let create ~phirc ~cid ~chid =
 
     method do_action =
       []
+
+    method listen ~msg ~achid =
+      let name =
+        match Chara_name_cache.get_name ~chid:achid with
+            None -> "????"
+          | Some n -> n
+      in
+      self#send_message (name ^ " > " ^ msg);
+      []
+
+    method say ~msg =      
+      [Event.Say (chid, msg)]
 
     method hit =
       let pos = Phi_map.get_chara_position ~chara_id:chid in

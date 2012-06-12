@@ -9,7 +9,7 @@ OCAMLOPTFLAGS=$(INCLUDES) # add other options for ocamlopt here
 # units: mod1, mod2 and mod3.
 
 # The list of object files for prog1
-PROG1_OBJS=tcp_server.cma dm_message.cmo protocol.cmo item.cmo phi_map.cmo chara.cmo client_manager.cmo chara_id.cmo chara_name_cache.cmo chara_status.cmo combat.cmo player_character_db.cmo non_player_character.cmo player_character.cmo chara_manager.cmo event.cmo clock.cmo phi_dm.cmo
+PROG1_OBJS=tcp_server.cma dm_message.cmo protocol.cmo item.cmo phi_map.cmo chara.cmo client_manager.cmo chara_id.cmo chara_name_cache.cmo chara_status.cmo combat.cmo player_character_db.cmo player_character.cmo non_player_character.cmo chara_data.cmo chara_manager.cmo event.cmo clock.cmo phi_dm.cmo
 
 a.out: $(PROG1_OBJS)
 	$(OCAMLC) -o a.out $(OCAMLFLAGS) $(PROG1_OBJS)

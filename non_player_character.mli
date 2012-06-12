@@ -13,7 +13,9 @@ type t =
   resolve_attack_result : result_list:Combat.result list -> dchid:Chara_id.t -> Event.t list;
      (* throw an exception if there is no such item *)
   item_get : item:Item.t -> Event.t list;
-  dead : Event.t list>
+  dead : Event.t list;
+  say : msg:string -> Event.t list;
+  listen : msg:string -> achid:Chara_id.t -> Event.t list>
 
 val create :
   chid : Chara_id.t ->

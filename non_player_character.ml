@@ -16,7 +16,9 @@ type t =
   resolve_attack_result : result_list:Combat.result list -> dchid:Chara_id.t -> Event.t list;
      (* throw an exception if there is no such item *)
   item_get : item:Item.t -> Event.t list;
-  dead : Event.t list>
+  dead : Event.t list;
+  say : msg:string -> Event.t list;
+  listen : msg:string -> achid:Chara_id.t -> Event.t list>
 
 
 let adirs = [|Phi_map.North; Phi_map.East; Phi_map.West; Phi_map.South|];;
@@ -104,9 +106,15 @@ let create ~chid =
     method get_status_view =
       Chara_status.get_view ~status
 
+    method say ~msg:_ =
+      []
+
+    method listen ~msg:_ ~achid:_ =
+      []
+
     method get_item_list =
       item_list
-
+    
   end in
   let pos = Phi_map.get_default_position in (* tentative *)
   let adir = Phi_map.North in (* tentative *)
