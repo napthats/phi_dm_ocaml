@@ -123,6 +123,8 @@ let create ~phirc ~cid ~chid =
       self#send_message (Dm_message.make Dm_message.Try_again);
       self#send_message (Dm_message.make Dm_message.Savedata);
       self#send_message " "; (*dummy*)
+      let status_view = Chara_status.get_view ~status in
+      status <- Chara_status.add_hp ~status ~hp:(1 - status_view.hp);
       []
 
     method resolve_attack_result ~result_list ~dchid =
