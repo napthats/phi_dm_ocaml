@@ -143,6 +143,7 @@ let execute_event = function
           (Dm_message.make Dm_message.Savedata);
         Client_manager.send_message ~cid ~msg:
           (Dm_message.make Dm_message.Seeyou);
+        Client_manager.send_message ~cid ~msg:" "; (* dummy *)
         Chara_data.remove_chara chara_id
     )
   | Event.Client_message (cid, Protocol.Raw_client_protocol (Protocol.Go dir)) ->

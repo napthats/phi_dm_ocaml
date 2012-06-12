@@ -16,6 +16,8 @@ type msg_type =
   | Change_client_fail
   | Savedata
   | Seeyou
+  | Try_again
+  | Dead
 ;;
 
 let make = function
@@ -33,6 +35,8 @@ let make = function
   | No_character -> " Your character is not here."
   | Access_already -> " You accessed already."
   | Change_client_fail -> " Changing client is failed."
+  | Dead -> "DM > You are dead... \n"
+  | Try_again -> "  Try again.  \n"
   | Savedata -> "  Saving data..  "
   | Seeyou -> "  See you next time.  "
   | Pc_status (pc_name, v, item_name_list) ->
