@@ -6,111 +6,120 @@ open Item.Open
 let ($) f g x = f (g x);;
 
 
-let execute_event = function
-    Event.Client_message (cid, Protocol.Raw_client_protocol (Protocol.Raw_message msg)) ->
-    (match Chara_data.get_pc_by_cid cid with
-        None -> []
-      | Some pc ->
-        pc#say ~msg)
-  | Event.Client_message (cid, Protocol.Raw_client_protocol Protocol.Exit) ->
-    (match Chara_data.get_chara_id_by_cid cid with
-        None -> []
-      | Some chara_id ->
-        Client_manager.send_message ~cid ~msg:
-          (Dm_message.make Dm_message.Savedata);
-        Client_manager.send_message ~cid ~msg:
-          (Dm_message.make Dm_message.Seeyou);
-        Client_manager.send_message ~cid ~msg:" "; (* dummy *)
-        Chara_data.remove_chara chara_id
-    )
-  | Event.Client_message (cid, Protocol.Raw_client_protocol (Protocol.Go dir)) ->
-    (match Chara_data.get_pc_by_cid cid with
-        None -> []
-      | Some pc -> pc#go ~dir
-    )
-  | Event.Client_message (cid, Protocol.Raw_client_protocol (Protocol.Turn maybe_dir)) ->
-    (match Chara_data.get_pc_by_cid cid with
-        None -> []
-      | Some pc ->
-        (match maybe_dir with
-            None -> 
-              Client_manager.send_message ~cid
-                ~msg:(Dm_message.make Dm_message.Turn_bad);
-              []
-          | Some dir ->
-            pc#turn ~dir
-        )
-    )
-  | Event.Client_message (cid, Protocol.Raw_client_protocol Protocol.Hit) ->
-    (match Chara_data.get_pc_by_cid cid with
-        None -> []
-      | Some pc -> pc#hit
-    )
-  | Event.Client_message (cid, Protocol.Raw_client_protocol Protocol.Check) ->
-    (match Chara_data.get_pc_by_cid cid with
-        None -> []
-      | Some pc ->
-        Client_manager.send_message ~cid
-          ~msg:(
-            Dm_message.make (
-              Dm_message.Pc_status(
-                pc#get_name,
-                pc#get_status_view,
-                List.map (fun item -> Item.get_name ~item) pc#get_item_list
-              )
-            )
-          );
-        pc#sight_update
-    )
-  | Event.Client_message (cid, Protocol.Raw_client_protocol (Protocol.Get item)) ->
-    (match Chara_data.get_chara_id_by_cid cid with
-        None -> []
-      | Some chara_id ->
-        (*          let chara = Hashtbl.find chara_tbl chara_id in *)
-        (* tentative *)
-        let pos = Phi_map.get_chara_position ~chara_id in
-        (match item with
-            None ->
+let execute_raw_client_protocol (cid, pc, protocol) =
+  (match pc#get_command_st with
+      Player_character.List_select Player_character.Get ->
+      (match protocol with
+          Protocol.Raw_message msg ->
+          (try 
+            (let ord = (int_of_string msg) - 1 in
+             let pos = Phi_map.get_chara_position ~chara_id:pc#get_chara_id in
+             let item_list = Phi_map.get_item_list_with_position ~pos in
+             if ord >= 0 && ord < (List.length item_list)
+             then
+               (pc#set_command_st ~st:Player_character.Normal;
+               pc#item_get ~item:(List.nth item_list ord))
+             else
+               (pc#set_command_st ~st:Player_character.Normal;
+                Client_manager.send_message ~cid
+                  ~msg:(Dm_message.make Dm_message.Get_no);
+                []))
+          with
+              Failure "int_of_string" ->
+                pc#set_command_st ~st:Player_character.Normal;
+                Client_manager.send_message ~cid
+                  ~msg:(Dm_message.make Dm_message.Get_cancel);
+                []
+          )
+        | Protocol.Go _ | Protocol.Turn _ | Protocol.Hit
+        | Protocol.Get _ | Protocol.Check | Protocol.Exit ->
+          pc#set_command_st ~st:Player_character.Normal;
+          Client_manager.send_message ~cid
+            ~msg:(Dm_message.make Dm_message.Get_cancel);
+          [])
+    | Player_character.Normal ->
+      (match protocol with
+          Protocol.Raw_message msg ->
+            pc#say ~msg
+        | Protocol.Exit ->
+          Client_manager.send_message ~cid ~msg:
+            (Dm_message.make Dm_message.Savedata);
+          Client_manager.send_message ~cid ~msg:
+            (Dm_message.make Dm_message.Seeyou);
+          Client_manager.send_message ~cid ~msg:" "; (* dummy *)
+          Chara_data.remove_chara pc#get_chara_id
+        | Protocol.Go dir ->
+          pc#go ~dir
+        | Protocol.Turn maybe_dir ->
+          (match maybe_dir with
+              None -> 
+                Client_manager.send_message ~cid
+                  ~msg:(Dm_message.make Dm_message.Turn_bad);
+                []
+            | Some dir ->
+              pc#turn ~dir)
+        | Protocol.Hit ->
+          pc#hit
+        | Protocol.Check ->
+          Client_manager.send_message ~cid
+            ~msg:(Dm_message.make (Dm_message.Pc_status(
+              pc#get_name,
+              pc#get_status_view,
+              List.map (fun item -> Item.get_name ~item) pc#get_item_list)));
+          pc#sight_update
+        | Protocol.Get item ->
+          let chara_id = pc#get_chara_id in
+    (*          let chara = Hashtbl.find chara_tbl chara_id in *)
+          let pos = Phi_map.get_chara_position ~chara_id in
+          (match item with
+              None ->
+                (match Phi_map.get_item_list_with_position ~pos with
+                    [] ->
+                      Client_manager.send_message ~cid ~msg:
+                        (Dm_message.make Dm_message.No_item_here);
+                      []
+                  | item_list ->
+                    Client_manager.send_message ~cid ~msg:
+                      (Dm_message.make (Dm_message.Get_list 
+                                          (List.map 
+                                             (fun item -> (Item.get_view ~item).name)
+                                             item_list)));
+                    Client_manager.send_message ~cid ~msg:
+                      (Dm_message.make Dm_message.Get_select);
+                    pc#set_command_st
+                      ~st:(Player_character.List_select Player_character.Get);
+                    []
+                )
+            | Some target_name ->
               (match Phi_map.get_item_list_with_position ~pos with
                   [] ->
                     Client_manager.send_message ~cid ~msg:
-                      (Dm_message.make Dm_message.No_item_here);
+                      (Dm_message.make Dm_message.Get_bad);
                     []
                 | item_list ->
-                  ignore (List.map
-                            (fun item -> Client_manager.send_message ~cid
-                              ~msg:((Item.get_view ~item).name ^ ", "))
-                            item_list);
-                  []
+                  (match
+                      List.find_all 
+                        (fun item -> (Item.get_view ~item).name = target_name)
+                        item_list
+                   with
+                       [] ->
+                         Client_manager.send_message ~cid ~msg:
+                           (Dm_message.make Dm_message.Get_bad);
+                         []
+                     | item :: _ ->
+                       (match Chara_data.get_pc_by_cid cid with
+                           None -> []
+                         | Some pc -> pc#item_get ~item
+                       )
+                  )
               )
-          | Some target_name ->
-            (match Phi_map.get_item_list_with_position ~pos with
-                [] ->
-                  Client_manager.send_message ~cid ~msg:
-                    (Dm_message.make Dm_message.Get_bad);
-                  []
-              | item_list ->
-                (match
-                    List.find_all 
-                      (fun item -> (Item.get_view ~item).name = target_name)
-                      item_list
-                 with
-                     [] ->
-                       Client_manager.send_message ~cid ~msg:
-                         (Dm_message.make Dm_message.Get_bad);
-                       []
-                   | item :: _ ->
-                     (match Chara_data.get_pc_by_cid cid with
-                         None -> []
-                       | Some pc -> pc#item_get ~item
-                     )
-                )
-            )
-        )
-    )
+          )
+      )
+  )
 
-  (* tentative: ignore duplicate open now *)
-  | (Event.Client_message (cid, Protocol.Sharp_client_protocol (Protocol.Open phirc))) ->
+let execute_sharp_client_protocol (cid, protocol) = match protocol with
+   (* tentative: ignore duplicate open now *)
+  Protocol.Open phirc ->
     (match Chara_data.get_pc_by_phirc phirc with
         Some _ ->
           Client_manager.send_message ~cid ~msg:
@@ -121,14 +130,29 @@ let execute_event = function
       | None ->
         (match Chara_data.create_pc cid phirc with
             None ->
-              Client_manager.send_message ~cid ~msg:(Dm_message.make Dm_message.No_character);
+              Client_manager.send_message ~cid
+                ~msg:(Dm_message.make Dm_message.No_character);
               []
           | Some event_list ->
             event_list
         )
     )
-  | (Event.Client_message (_, Protocol.Sharp_client_protocol (Protocol.Unknown))) ->
+  | Protocol.Unknown ->
     []
+
+let execute_client_message (cid, client_message) =
+  (match client_message with
+      Protocol.Raw_client_protocol protocol ->
+        (match Chara_data.get_pc_by_cid cid with
+            None -> []
+          | Some pc ->
+            execute_raw_client_protocol (cid, pc, protocol))
+    | Protocol.Sharp_client_protocol protocol ->
+      execute_sharp_client_protocol (cid, protocol))
+
+let execute_event = function
+    Event.Client_message (cid, client_message) ->
+      execute_client_message (cid, client_message)
 
   | Event.Tick ->
     List.concat (Chara_data.map (fun chara -> chara#do_action))

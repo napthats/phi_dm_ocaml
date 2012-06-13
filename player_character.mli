@@ -1,3 +1,9 @@
+type list_select_type = Get
+
+type command_st = 
+    Normal
+  | List_select of list_select_type
+
 type t = 
     <get_name : string;
   get_status_view : Chara_status.view;
@@ -17,6 +23,8 @@ type t =
   say : msg:string -> Event.t list;
   listen : msg:string -> achid:Chara_id.t -> Event.t list;
 
+  get_command_st : command_st;
+  set_command_st : st:command_st -> unit;
   get_phirc : string>
 
 val create :

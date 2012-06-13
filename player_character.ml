@@ -1,6 +1,11 @@
 open Chara_status.Open
 
 
+type list_select_type = Get
+
+type command_st = 
+    Normal
+  | List_select of list_select_type
 
 type t = 
     <get_name : string;
@@ -21,6 +26,8 @@ type t =
   say : msg:string -> Event.t list;
   listen : msg:string -> achid:Chara_id.t -> Event.t list;
 
+  set_command_st : st:command_st -> unit;
+  get_command_st : command_st;
   get_phirc : string>
 
 
@@ -40,6 +47,7 @@ let create ~phirc ~cid ~chid =
     val mutable status =
       Chara_status.create ~view:status
     val mutable item_list = item_list
+    val mutable command_st = Normal
 
     method get_name = name
     method get_phirc = phirc
@@ -163,6 +171,12 @@ let create ~phirc ~cid ~chid =
 
     method get_item_list =
       item_list
+
+    method set_command_st ~st =
+      command_st <- st
+
+    method get_command_st =
+      command_st
     
     method private send_message msg = Client_manager.send_message ~cid ~msg
     method sight_update =
