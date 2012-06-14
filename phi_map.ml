@@ -38,10 +38,10 @@ struct
   let data =
     ([|[|(Bars, ([], [])); (Door, ([], [item_debug])); (Flower, ([], [])); (Glass, ([], [])); (Grass, ([], [])); (Mist, ([], [])); (Mwall, ([], []))|];
        [|(Bars, ([], [])); (Door, ([], [])); (Flower, ([], [])); (Glass, ([], [])); (Grass, ([], [])); (Mist, ([], [])); (Mwall, ([], []))|];
-       [|(Bars, ([], [])); (Door, ([], [])); (Flower, ([], [])); (Glass, ([], [])); (Grass, ([], [])); (Mist, ([], [])); (Mwall, ([], []))|];
-       [|(Bars, ([], [])); (Door, ([], [])); (Flower, ([], [])); (Glass, ([], [])); (Grass, ([], [])); (Mist, ([], [])); (Mwall, ([], []))|];
-       [|(Bars, ([], [])); (Door, ([], [])); (Flower, ([], [])); (Glass, ([], [])); (Grass, ([], [])); (Mist, ([], [])); (Mwall, ([], []))|];
-       [|(Bars, ([], [])); (Door, ([], [])); (Flower, ([], [])); (Glass, ([], [])); (Grass, ([], [])); (Mist, ([], [])); (Mwall, ([], []))|];
+       [|(Bars, ([], [])); (Door, ([], [])); (Flower, ([], [])); (Rock, ([], [])); (Grass, ([], [])); (Mist, ([], [])); (Mwall, ([], []))|];
+       [|(Bars, ([], [])); (Door, ([], [])); (Rock, ([], [])); (Glass, ([], [])); (Grass, ([], [])); (Mist, ([], [])); (Mwall, ([], []))|];
+       [|(Bars, ([], [])); (Door, ([], [])); (Rock, ([], [])); (Glass, ([], [])); (Rock, ([], [])); (Mist, ([], [])); (Mwall, ([], []))|];
+       [|(Bars, ([], [])); (Door, ([], [])); (Rock, ([], [])); (Rock, ([], [])); (Rock, ([], [])); (Mist, ([], [])); (Mwall, ([], []))|];
        [|(Bars, ([], [])); (Door, ([], [])); (Flower, ([], [])); (Glass, ([], [])); (Grass, ([], [])); (Mist, ([], [])); (Mwall, ([], []))|];|])
   ;;
   let get_chip_view pos = fst data.(pos.py).(pos.px);;
@@ -58,17 +58,15 @@ struct
   let set_item_list pos item_list = 
     let (cv, (chara_list, _)) = data.(pos.py).(pos.px) in
     data.(pos.py).(pos.px) <- (cv, (chara_list, item_list))
-  ;;
 
-  let data_width = 7;;
+  let data_width = 7
 
-  let data_height = 7;;
+  let data_height = 7
 
   let is_valid_pos pos =
     pos.px >= 0 && pos.px < data_width && pos.py >= 0 && pos.py < data_height
-  ;;
 end
-;;
+
 
 
 let charaid_pos_tbl = Hashtbl.create 100;;
@@ -155,12 +153,17 @@ let get_normal_sight_offset = function
   | East -> List.map (List.rev $ (List.map (fun (x, y) -> (-y, -x)))) normal_sight_offset
   | West -> List.map (List.rev $ (List.map (fun (x, y) -> (y, x)))) normal_sight_offset
   | South -> List.map (List.map (fun (x, y) -> (-x, -y))) normal_sight_offset
-;;
+
+let is_transparent = function
+   Tgate | Pcircle | Road | Bars | Door | Dummy | Flower | Glass | Grass | Water | Window | Wood | Pcircle_lock -> true
+  | Mist | Mwall | Rock | Unknown | Wwall | Door_lock -> false
+
+let cansee_check_ord = [(0, 0); (0, -1); (1, 0); (0, 1); (-1, 0); (0, -2); (1, -1); (2, 0); (1, 1); (0, 2); (-1, 1); (-2, 0); (-1, -1); (0, -3); (1, -2); (2, -1); (3, 0); (2, 1); (1, 2); (-1, 2); (-2, 1); (-3, 0); (-2, -1); (-1, -2); (0, -4); (1, -3); (2, -2); (3, -1); (3, 1); (2, 2); (-2, 2); (-3, 1); (-3, -1); (-2, -2); (-1, -3); (1, -4); (2, -3); (3, -2); (3, 2); (-3, 2); (-3, -2); (-2, -3); (-1, -4); (2, -4); (3, -3); (-3, -3); (-2, -4); (3, -4); (-3, -4)]
 
 let get_mapview ~chara_id =
   let dir = Hashtbl.find charaid_dir_tbl chara_id in
   let pos = Hashtbl.find charaid_pos_tbl chara_id in
-  let view =
+  let all_view =
     List.map
       (List.map (fun (ox, oy) ->
         let p = {px = pos.px + ox; py = pos.py + oy} in
@@ -169,8 +172,57 @@ let get_mapview ~chara_id =
         else Unknown))
       (get_normal_sight_offset dir)
   in
+  let view =
+    List.fold_left
+      (fun view (ox, oy) ->
+        let nnth list x y = List.nth (List.nth list (y+4)) (x+3) in
+        let set_nnth list x y elem =
+          let list_y = List.concat (List.take 1 (List.drop (y+4) list)) in
+          List.append
+            (List.take (y+4) list)
+            (List.append
+               ((List.append
+                  (List.take (x+3) list_y)
+                  (List.append
+                     [elem]
+                     (List.drop (x+3+1) list_y))) :: [])
+               (List.drop (y+4+1) list))
+        in
+        let dist = abs ox + abs oy in
+        if dist <= 1
+        then view
+        else
+          (match (ox, oy) with
+              (0, 0) -> view
+            | (0, _) ->
+                if is_transparent (nnth view 0 (oy - (oy / abs oy)))
+                then view
+                else set_nnth view 0 oy Unknown
+            | (_, 0) ->
+                if is_transparent (nnth view (ox - (ox / abs ox)) 0)
+                then view
+                else set_nnth view ox 0 Unknown
+            | _ ->
+              if (dist <> 2) &&
+                (not (is_transparent (nnth view (ox-(ox/abs ox)) (oy-(oy/abs oy)))))
+              then
+                set_nnth view ox oy Unknown
+              else
+                (
+                  if (dist <> 3) &&
+                    (not (is_transparent (nnth view ox (oy-(oy/abs oy))))) &&
+                    (not (is_transparent (nnth view (ox-(ox/abs ox)) oy)))
+                  then
+                    set_nnth view ox oy Unknown
+                  else
+                    view
+                )
+          )
+      )
+      all_view
+      cansee_check_ord
+  in
   (dir, view)
-;;
 
 let get_cansee_chara_list ~pos =
   let pos_to_sight_viewpos dir pos =
@@ -239,9 +291,11 @@ let get_chara_in_sight_list ~chara_id:chid =
   let sight_pos_list =
     List.map (fun (ox, oy) -> {px = pos.px + ox; py = pos.py + oy}) sight_offset_list
   in
+  let (_, mapview) = get_mapview ~chara_id:chid in
   List.concat (List.map
     (fun (pos, (vx, vy)) ->
-      if Map_data.is_valid_pos pos
+      if Map_data.is_valid_pos pos &&
+        List.nth (List.nth mapview (vy+4)) (vx+3) <> Unknown
       then
         List.map
           (fun chara_id ->

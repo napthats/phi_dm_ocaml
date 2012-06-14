@@ -10,7 +10,7 @@ type msg_type =
   | No_item_here
   | Get_bad
   | Get_no
-  | Get_cancel
+  | Cancel_list_select
   | Get of (string * string)
   | No_character
   | Pc_status of (string * Chara_status.view * string list)
@@ -35,7 +35,7 @@ let make = function
   | No_item_here -> "DM > Here is no item."
   | Get_bad -> "DM > Can not get such a thing."
   | Get_no -> "DM > Can not get."
-  | Get_cancel -> "DM > Cancel to get."
+  | Cancel_list_select -> "DM > Cancel list selecting."
   | Get (chara_name, item_name) -> "DM > " ^ chara_name ^ " gets " ^ item_name ^ "."
   | No_character -> " Your character is not here."
   | Access_already -> " You accessed already."

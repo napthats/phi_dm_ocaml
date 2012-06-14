@@ -28,14 +28,14 @@ let execute_raw_client_protocol (cid, pc, protocol) =
               Failure "int_of_string" ->
                 pc#set_command_st ~st:Player_character.Normal;
                 Client_manager.send_message ~cid
-                  ~msg:(Dm_message.make Dm_message.Get_cancel);
+                  ~msg:(Dm_message.make Dm_message.Cancel_list_select);
                 []
           )
         | Protocol.Go _ | Protocol.Turn _ | Protocol.Hit
         | Protocol.Get _ | Protocol.Check | Protocol.Exit ->
           pc#set_command_st ~st:Player_character.Normal;
           Client_manager.send_message ~cid
-            ~msg:(Dm_message.make Dm_message.Get_cancel);
+            ~msg:(Dm_message.make Dm_message.Cancel_list_select);
           [])
     | Player_character.Normal ->
       (match protocol with
