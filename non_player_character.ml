@@ -4,7 +4,7 @@ open Chara_status.Open
 type t = 
     <get_name : string;
   get_status_view : Chara_status.view;
-  get_item_list : Item.t list;
+  get_item_list : (Item.t * Chara.equip_flag option) list;
   get_chara_id : Chara_id.t;
   sight_change : Chara.sight_change_type -> Event.t list;
   sight_update : Event.t list;
@@ -18,8 +18,8 @@ type t =
   item_get : item:Item.t -> Event.t list;
   dead : Event.t list;
   say : msg:string -> Event.t list;
-  listen : msg:string -> achid:Chara_id.t -> Event.t list>
-
+  listen : msg:string -> achid:Chara_id.t -> Event.t list;
+  use_item : item:Item.t -> Event.t list>
 
 let adirs = [|Phi_map.North; Phi_map.East; Phi_map.West; Phi_map.South|];;
 
@@ -35,6 +35,10 @@ let create ~chid =
     method get_name = "npc " ^ (string_of_int (Chara_id.to_num ~id:chid))
     method sight_change _ = []
     method get_chara_id = chid
+
+    method use_item ~item:_ = 
+      print_endline "not inplemented: non_player_character equip";
+      []
 
     method turn ~dir =
       let adir =
@@ -92,9 +96,11 @@ let create ~chid =
       else [Event.Attack_result ((achid, chid), result_list)]
 
     method resolve_attack_result ~result_list:_ ~dchid:_ =
+      print_endline "not inplemented: non_player_character resolve_attack_result";
       []
 
     method item_get ~item:_ =
+      print_endline "not inplemented: non_player_character item_get";
       []
 
     method sight_update =
@@ -107,9 +113,11 @@ let create ~chid =
       Chara_status.get_view ~status
 
     method say ~msg:_ =
+      print_endline "not inplemented: non_player_character say";
       []
 
     method listen ~msg:_ ~achid:_ =
+      print_endline "not inplemented: non_player_character listen";
       []
 
     method get_item_list =

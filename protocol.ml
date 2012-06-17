@@ -7,6 +7,7 @@ type raw_client_protocol =
   | Turn of Phi_map.direction option
   | Hit
   | Get of string option
+  | Use of string option
   | Check
   | Exit
 
@@ -50,6 +51,8 @@ let decode_raw_client_protocol protocol =
     | ["hit"] -> Hit
     | ["get"] -> Get None
     | "get" :: name_list -> Get (Some (String.concat " " name_list))
+    | ["use"] -> Use None
+    | "get" :: name_list -> Use (Some (String.concat " " name_list))
     | ["check"] -> Check
     | ["exit"] -> Exit
     | _ -> Raw_message protocol

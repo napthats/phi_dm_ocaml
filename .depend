@@ -16,17 +16,19 @@ player_character.cmi: tcp_server.cmi phi_map.cmi item.cmi event.cmo \
 protocol.cmi: phi_map.cmi
 tcp_server.cmi:
 chara_data.cmo: player_character_db.cmi player_character.cmi phi_map.cmi \
-    non_player_character.cmi event.cmo client_manager.cmi \
+    non_player_character.cmi item.cmi event.cmo client_manager.cmi \
     chara_name_cache.cmo chara_id.cmi chara.cmo chara_data.cmi
 chara_data.cmx: player_character_db.cmx player_character.cmx phi_map.cmx \
-    non_player_character.cmx event.cmx client_manager.cmx \
+    non_player_character.cmx item.cmx event.cmx client_manager.cmx \
     chara_name_cache.cmx chara_id.cmx chara.cmx chara_data.cmi
 chara_id.cmo: chara_id.cmi
 chara_id.cmx: chara_id.cmi
-chara_manager.cmo: protocol.cmi phi_map.cmi item.cmi event.cmo dm_message.cmo \
-    client_manager.cmi chara_data.cmi chara.cmo chara_manager.cmi
-chara_manager.cmx: protocol.cmx phi_map.cmx item.cmx event.cmx dm_message.cmx \
-    client_manager.cmx chara_data.cmx chara.cmx chara_manager.cmi
+chara_manager.cmo: protocol.cmi player_character.cmi phi_map.cmi item.cmi \
+    event.cmo dm_message.cmo client_manager.cmi chara_data.cmi chara.cmo \
+    chara_manager.cmi
+chara_manager.cmx: protocol.cmx player_character.cmx phi_map.cmx item.cmx \
+    event.cmx dm_message.cmx client_manager.cmx chara_data.cmx chara.cmx \
+    chara_manager.cmi
 chara.cmo: phi_map.cmi item.cmi event.cmo combat.cmi chara_status.cmi \
     chara_id.cmi
 chara.cmx: phi_map.cmx item.cmx event.cmx combat.cmx chara_status.cmx \
@@ -41,8 +43,8 @@ clock.cmo: event.cmo clock.cmi
 clock.cmx: event.cmx clock.cmi
 combat.cmo: chara_status.cmi combat.cmi
 combat.cmx: chara_status.cmx combat.cmi
-dm_message.cmo: chara_status.cmi
-dm_message.cmx: chara_status.cmx
+dm_message.cmo: chara_status.cmi chara.cmo
+dm_message.cmx: chara_status.cmx chara.cmx
 event.cmo: tcp_server.cmi protocol.cmi phi_map.cmi combat.cmi chara_id.cmi
 event.cmx: tcp_server.cmi protocol.cmx phi_map.cmx combat.cmx chara_id.cmx
 item.cmo: item.cmi

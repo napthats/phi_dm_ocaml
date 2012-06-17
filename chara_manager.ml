@@ -8,21 +8,35 @@ let ($) f g x = f (g x);;
 
 let execute_raw_client_protocol (cid, pc, protocol) =
   (match pc#get_command_st with
-      Player_character.List_select Player_character.Get ->
+      Player_character.List_select select_type ->
       (match protocol with
           Protocol.Raw_message msg ->
-          (try 
+          (try
             (let ord = (int_of_string msg) - 1 in
-             let pos = Phi_map.get_chara_position ~chara_id:pc#get_chara_id in
-             let item_list = Phi_map.get_item_list_with_position ~pos in
+             let item_list = (match select_type with
+                 Player_character.Get ->
+                 let pos = Phi_map.get_chara_position ~chara_id:pc#get_chara_id in
+                 Phi_map.get_item_list_with_position ~pos
+               | Player_character.Use ->
+                 (List.map fst pc#get_item_list))
+             in
              if ord >= 0 && ord < (List.length item_list)
              then
                (pc#set_command_st ~st:Player_character.Normal;
-               pc#item_get ~item:(List.nth item_list ord))
+                (match select_type with
+                     Player_character.Get ->
+                     pc#item_get ~item:(List.nth item_list ord)
+                   | Player_character.Use ->
+                     pc#use_item ~item:(List.nth item_list ord)))
              else
                (pc#set_command_st ~st:Player_character.Normal;
                 Client_manager.send_message ~cid
-                  ~msg:(Dm_message.make Dm_message.Get_no);
+                  ~msg:(match select_type with
+                      Player_character.Get ->
+                      Dm_message.make Dm_message.Get_no
+                    | Player_character.Use ->
+                      Dm_message.make Dm_message.Use_no
+                  );
                 []))
           with
               Failure "int_of_string" ->
@@ -32,11 +46,13 @@ let execute_raw_client_protocol (cid, pc, protocol) =
                 []
           )
         | Protocol.Go _ | Protocol.Turn _ | Protocol.Hit
-        | Protocol.Get _ | Protocol.Check | Protocol.Exit ->
+        | Protocol.Get _ | Protocol.Check | Protocol.Exit 
+        | Protocol.Use _ ->
           pc#set_command_st ~st:Player_character.Normal;
           Client_manager.send_message ~cid
             ~msg:(Dm_message.make Dm_message.Cancel_list_select);
           [])
+      
     | Player_character.Normal ->
       (match protocol with
           Protocol.Raw_message msg ->
@@ -65,11 +81,55 @@ let execute_raw_client_protocol (cid, pc, protocol) =
             ~msg:(Dm_message.make (Dm_message.Pc_status(
               pc#get_name,
               pc#get_status_view,
-              List.map (fun item -> Item.get_name ~item) pc#get_item_list)));
+              List.map
+                (fun (item, equip_flag) -> (Item.get_name ~item, equip_flag))
+                pc#get_item_list)));
           pc#sight_update
+
+        | Protocol.Use item ->
+          (match item with
+              None ->
+                (match (List.map fst pc#get_item_list) with
+                    [] ->
+                      Client_manager.send_message ~cid ~msg:
+                        (Dm_message.make Dm_message.No_item_investory);
+                      []
+                  | item_list ->
+                    Client_manager.send_message ~cid ~msg:
+                      (Dm_message.make (Dm_message.Item_list 
+                                          (List.map 
+                                             (fun item -> (Item.get_view ~item).name)
+                                             item_list)));
+                    Client_manager.send_message ~cid ~msg:
+                      (Dm_message.make Dm_message.Use_select);
+                    pc#set_command_st
+                      ~st:(Player_character.List_select Player_character.Use);
+                    []
+                )
+            | Some target_name ->
+              (match (List.map fst pc#get_item_list) with
+                  [] ->
+                    Client_manager.send_message ~cid ~msg:
+                      (Dm_message.make Dm_message.No_item_investory);
+                    []
+                | item_list ->
+                  (match
+                      List.find_all 
+                        (fun item -> (Item.get_view ~item).name = target_name)
+                        item_list
+                   with
+                       [] ->
+                         Client_manager.send_message ~cid ~msg:
+                           (Dm_message.make Dm_message.Use_bad);
+                         []
+                     | item :: _ ->
+                       pc#use_item ~item
+                  )
+              )
+          )
+
         | Protocol.Get item ->
           let chara_id = pc#get_chara_id in
-    (*          let chara = Hashtbl.find chara_tbl chara_id in *)
           let pos = Phi_map.get_chara_position ~chara_id in
           (match item with
               None ->
@@ -80,7 +140,7 @@ let execute_raw_client_protocol (cid, pc, protocol) =
                       []
                   | item_list ->
                     Client_manager.send_message ~cid ~msg:
-                      (Dm_message.make (Dm_message.Get_list 
+                      (Dm_message.make (Dm_message.Item_list 
                                           (List.map 
                                              (fun item -> (Item.get_view ~item).name)
                                              item_list)));
@@ -107,10 +167,7 @@ let execute_raw_client_protocol (cid, pc, protocol) =
                            (Dm_message.make Dm_message.Get_bad);
                          []
                      | item :: _ ->
-                       (match Chara_data.get_pc_by_cid cid with
-                           None -> []
-                         | Some pc -> pc#item_get ~item
-                       )
+                       pc#item_get ~item
                   )
               )
           )

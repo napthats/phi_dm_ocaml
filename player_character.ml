@@ -1,7 +1,8 @@
 open Chara_status.Open
+open Item.Open
 
 
-type list_select_type = Get
+type list_select_type = Get | Use
 
 type command_st = 
     Normal
@@ -10,7 +11,7 @@ type command_st =
 type t = 
     <get_name : string;
   get_status_view : Chara_status.view;
-  get_item_list : Item.t list;
+  get_item_list : (Item.t * Chara.equip_flag option) list;
   get_chara_id : Chara_id.t;
   sight_change : Chara.sight_change_type -> Event.t list;
   sight_update : Event.t list;
@@ -25,6 +26,7 @@ type t =
   dead : Event.t list;
   say : msg:string -> Event.t list;
   listen : msg:string -> achid:Chara_id.t -> Event.t list;
+  use_item : item:Item.t -> Event.t list;
 
   set_command_st : st:command_st -> unit;
   get_command_st : command_st;
@@ -34,6 +36,7 @@ type t =
 let ($) f g x = f (g x);;
 
 let client_map_center = (3, 4);;
+
 
 let create ~phirc ~cid ~chid = 
   match Player_character_db.load ~phirc with
@@ -46,7 +49,7 @@ let create ~phirc ~cid ~chid =
     val chid = chid
     val mutable status =
       Chara_status.create ~view:status
-    val mutable item_list = item_list
+    val mutable item_list = List.map (fun item -> (item, None)) item_list
     val mutable command_st = Normal
 
     method get_name = name
@@ -111,6 +114,26 @@ let create ~phirc ~cid ~chid =
     method say ~msg =      
       [Event.Say (chid, msg)]
 
+    method use_item ~item =
+      let view = Item.get_view ~item in
+      (match view.item_type with
+          Weapon _ ->
+            item_list <-
+              List.map 
+              (fun (i, flag) ->
+                if i == item
+                then (i, Some Chara.Wpn)
+                else
+                  (if flag = Some Chara.Wpn
+                   then (i, None)
+                   else (i, flag)))
+              item_list;
+            self#send_message
+              (Dm_message.make (Dm_message.Use(self#get_name, Item.get_name ~item)));
+            self#send_message
+             (Dm_message.make(Dm_message.Equip(self#get_name, Item.get_name ~item)));
+            [])
+
     method hit =
       let pos = Phi_map.get_chara_position ~chara_id:chid in
       let adir = Phi_map.get_chara_absolute_direction ~chara_id:chid in
@@ -162,7 +185,7 @@ let create ~phirc ~cid ~chid =
 
     method item_get ~item =
       self#send_message (Dm_message.make (Dm_message.Get (self#get_name, (Item.get_name ~item))));
-      item_list <- item :: item_list;
+      item_list <- (item, None) :: item_list;
       Phi_map.delete_item ~item ~pos:(Phi_map.get_chara_position ~chara_id:chid);
       []
 

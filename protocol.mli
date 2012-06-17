@@ -4,6 +4,7 @@ type raw_client_protocol =
   | Turn of Phi_map.direction option
   | Hit
   | Get of string option
+  | Use of string option
   | Check
   | Exit
 

@@ -101,7 +101,7 @@ let remove_chara chid =
               ~pos
               ~adir
               ~status:pc#get_status_view
-              ~item_list:pc#get_item_list;
+              ~item_list:(List.map fst pc#get_item_list);
             Phi_map.delete_chara ~chara_id:chid;
             Client_manager.disconnect ~cid;
             Hashtbl.remove client_tbl cid;

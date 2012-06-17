@@ -1,3 +1,5 @@
+type equip_flag = Wpn | Arm | Acr
+
 type sight_change_type =
     Appear_chara of (t * Phi_map.view_position)
   | Move_chara of (t * (Phi_map.view_position * Phi_map.view_position))
@@ -5,7 +7,7 @@ type sight_change_type =
 and
 t = <get_name : string;
      get_status_view : Chara_status.view;
-     get_item_list : Item.t list;
+     get_item_list : (Item.t * equip_flag option) list;
      get_chara_id : Chara_id.t;
      sight_change : sight_change_type -> Event.t list;
      sight_update : Event.t list;
@@ -19,4 +21,5 @@ t = <get_name : string;
      item_get : item:Item.t -> Event.t list;
      dead : Event.t list;
      say : msg:string -> Event.t list;
-     listen : msg:string -> achid:Chara_id.t -> Event.t list>
+     listen : msg:string -> achid:Chara_id.t -> Event.t list;
+     use_item : item:Item.t -> Event.t list>
