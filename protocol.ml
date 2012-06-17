@@ -8,6 +8,7 @@ type raw_client_protocol =
   | Hit
   | Get of string option
   | Use of string option
+  | Unequip
   | Check
   | Exit
 
@@ -55,6 +56,7 @@ let decode_raw_client_protocol protocol =
     | "get" :: name_list -> Use (Some (String.concat " " name_list))
     | ["check"] -> Check
     | ["exit"] -> Exit
+    | ["unequip"] -> Unequip
     | _ -> Raw_message protocol
 
 

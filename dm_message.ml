@@ -14,9 +14,13 @@ type msg_type =
   | Get of (string * string)
   | Get_select
   | Item_list of string list
+  | Item_list_with_equip of (string * Chara.equip_flag option) list
   | Use_select
   | Use of (string * string)
   | Equip of (string * string)
+  | Unequip_no
+  | Unequip_select
+  | Unequip of (string * string)
   | Put_bad
   | Use_bad
   | Use_no
@@ -60,6 +64,9 @@ let make = function
   | No_item_investory -> "DM > you do not have any items."
   | Use (name, item_name) -> "DM > " ^ name ^ " used " ^ item_name ^ "."
   | Equip (name, item_name) -> "DM > " ^ name ^ " equip " ^ item_name ^ "."
+  | Unequip (name, item_name) -> "DM > " ^ name ^ " unequiped " ^ item_name ^ "."
+  | Unequip_no -> "DM > Can not unequip."
+  | Unequip_select -> "DM > Input item number to unequip."
   | Item_list name_list ->
     String.rchop 
       (snd 
@@ -68,6 +75,22 @@ let make = function
               (ord+1, acc ^ (Printf.sprintf "[%2d] %s" ord name) ^ "\n"))
             (1, "")
             name_list))
+  | Item_list_with_equip name_list ->
+    let equip_flag_to_string = function
+        Some Chara.Wpn -> " [/*color=red*/Wpn/*.*/]"
+      | Some Chara.Arm -> " [/*color=+hp*/Arm/*.*/]"
+      | Some Chara.Acr -> " [/*color=blue*/Acr/*.*/]"
+      | None -> ""
+    in
+    let (_, item_string) =
+      List.fold_left
+        (fun (ord, acc) (item_name, eflag) -> (ord + 1, acc ^
+          Printf.sprintf "     [/*color=cyan*/%2d/*.*/] %-30s Wp  :%2d%s\n" ord item_name 0 (equip_flag_to_string eflag)
+         ))
+        (1, "")
+        name_list
+    in
+    item_string
   | Pc_status (pc_name, v, item_name_list) ->
     let equip_flag_to_string = function
         Some Chara.Wpn -> " [/*color=red*/Wpn/*.*/]"

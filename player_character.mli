@@ -1,4 +1,4 @@
-type list_select_type = Get | Use
+type list_select_type = Get | Use | Unequip
 
 type command_st = 
     Normal
@@ -23,6 +23,7 @@ type t =
   say : msg:string -> Event.t list;
   listen : msg:string -> achid:Chara_id.t -> Event.t list;
   use_item : item:Item.t -> Event.t list;
+  unequip_item : item:Item.t -> Event.t list;
 
   get_command_st : command_st;
   set_command_st : st:command_st -> unit;

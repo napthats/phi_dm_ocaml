@@ -16,7 +16,8 @@ type t =
   dead : Event.t list;
   say : msg:string -> Event.t list;
   listen : msg:string -> achid:Chara_id.t -> Event.t list;
-  use_item : item:Item.t -> Event.t list>
+  use_item : item:Item.t -> Event.t list;
+  unequip_item : item:Item.t -> Event.t list>
 
 val create :
   chid : Chara_id.t ->

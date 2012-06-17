@@ -5,6 +5,7 @@ type raw_client_protocol =
   | Hit
   | Get of string option
   | Use of string option
+  | Unequip
   | Check
   | Exit
 

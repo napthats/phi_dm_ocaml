@@ -18,16 +18,24 @@ let execute_raw_client_protocol (cid, pc, protocol) =
                  let pos = Phi_map.get_chara_position ~chara_id:pc#get_chara_id in
                  Phi_map.get_item_list_with_position ~pos
                | Player_character.Use ->
-                 (List.map fst pc#get_item_list))
+                 (List.map fst pc#get_item_list)
+               | Player_character.Unequip ->
+                 (List.filter_map 
+                    (fun (item, eflag) -> match eflag with
+                        None -> None
+                      | Some _ -> Some item) 
+                    pc#get_item_list))
              in
              if ord >= 0 && ord < (List.length item_list)
              then
                (pc#set_command_st ~st:Player_character.Normal;
                 (match select_type with
-                     Player_character.Get ->
-                     pc#item_get ~item:(List.nth item_list ord)
-                   | Player_character.Use ->
-                     pc#use_item ~item:(List.nth item_list ord)))
+                    Player_character.Get ->
+                    pc#item_get ~item:(List.nth item_list ord)
+                  | Player_character.Unequip ->
+                    pc#unequip_item ~item:(List.nth item_list ord)
+                  | Player_character.Use ->
+                    pc#use_item ~item:(List.nth item_list ord)))
              else
                (pc#set_command_st ~st:Player_character.Normal;
                 Client_manager.send_message ~cid
@@ -36,6 +44,8 @@ let execute_raw_client_protocol (cid, pc, protocol) =
                       Dm_message.make Dm_message.Get_no
                     | Player_character.Use ->
                       Dm_message.make Dm_message.Use_no
+                    | Player_character.Unequip ->
+                      Dm_message.make Dm_message.Unequip_no                      
                   );
                 []))
           with
@@ -47,7 +57,7 @@ let execute_raw_client_protocol (cid, pc, protocol) =
           )
         | Protocol.Go _ | Protocol.Turn _ | Protocol.Hit
         | Protocol.Get _ | Protocol.Check | Protocol.Exit 
-        | Protocol.Use _ ->
+        | Protocol.Use _ | Protocol.Unequip ->
           pc#set_command_st ~st:Player_character.Normal;
           Client_manager.send_message ~cid
             ~msg:(Dm_message.make Dm_message.Cancel_list_select);
@@ -86,6 +96,31 @@ let execute_raw_client_protocol (cid, pc, protocol) =
                 pc#get_item_list)));
           pc#sight_update
 
+        | Protocol.Unequip ->
+          (match List.filter
+              (fun (_, eflag) ->
+                match eflag with
+                    None -> false
+                  | Some _ -> true)
+              pc#get_item_list
+           with
+              [] ->
+                Client_manager.send_message ~cid ~msg:
+                  (Dm_message.make Dm_message.Unequip_no);
+                []
+            | item_list ->
+              Client_manager.send_message ~cid ~msg:
+                (Dm_message.make (Dm_message.Item_list_with_equip
+                                    (List.map 
+                                       (fun (item,e)->((Item.get_view ~item).name,e))
+                                       item_list)));
+              Client_manager.send_message ~cid ~msg:
+                (Dm_message.make Dm_message.Unequip_select);
+              pc#set_command_st
+                ~st:(Player_character.List_select Player_character.Unequip);
+              []
+          )
+
         | Protocol.Use item ->
           (match item with
               None ->
@@ -105,7 +140,7 @@ let execute_raw_client_protocol (cid, pc, protocol) =
                     pc#set_command_st
                       ~st:(Player_character.List_select Player_character.Use);
                     []
-                )
+                )                
             | Some target_name ->
               (match (List.map fst pc#get_item_list) with
                   [] ->

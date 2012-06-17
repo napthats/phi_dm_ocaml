@@ -2,7 +2,7 @@ open Chara_status.Open
 open Item.Open
 
 
-type list_select_type = Get | Use
+type list_select_type = Get | Use | Unequip
 
 type command_st = 
     Normal
@@ -27,6 +27,7 @@ type t =
   say : msg:string -> Event.t list;
   listen : msg:string -> achid:Chara_id.t -> Event.t list;
   use_item : item:Item.t -> Event.t list;
+  unequip_item : item:Item.t -> Event.t list;
 
   set_command_st : st:command_st -> unit;
   get_command_st : command_st;
@@ -133,6 +134,18 @@ let create ~phirc ~cid ~chid =
             self#send_message
              (Dm_message.make(Dm_message.Equip(self#get_name, Item.get_name ~item)));
             [])
+
+    method unequip_item ~item =
+      item_list <-
+        List.map 
+        (fun (i, flag) ->
+          if i == item
+          then (i, None)
+          else (i, flag))
+        item_list;
+      self#send_message
+        (Dm_message.make(Dm_message.Unequip(self#get_name, Item.get_name ~item)));
+      []
 
     method hit =
       let pos = Phi_map.get_chara_position ~chara_id:chid in
