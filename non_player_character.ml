@@ -101,7 +101,7 @@ let create ~chid =
       let adir = Phi_map.get_chara_absolute_direction ~chara_id:chid in
       match Phi_map.get_neighbor_position ~pos ~adir with
           None -> []
-        | Some front_pos -> [Event.Attack_to (chid, (front_pos, Combat.create ~attack_status:status))]
+        | Some front_pos -> [Event.Attack_to (chid, (front_pos, Combat.create ~attack_status:status ~attack_name:"knuckle"))]
 
     method defense ~combat ~achid =
       let (new_status, result_list) = combat status in

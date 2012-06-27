@@ -119,10 +119,24 @@ let create ~phirc ~cid ~chid =
             else (self#complete_spell spell)
         | List_select _ | Normal -> []
 
-    method private complete_spell _ =
-      self#send_message "complete!";
+    method private complete_spell spell =
+      let spell_name = Spell.get_name ~spell in
+      self#send_message (name ^ " > " ^ spell_name);
       command_st <- Normal;
-      []
+      let pos = Phi_map.get_chara_position ~chara_id:chid in
+      let adir = Phi_map.get_chara_absolute_direction ~chara_id:chid in
+      match Phi_map.get_neighbor_position ~pos ~adir with
+          None -> []
+        | Some front_pos -> 
+          (match Phi_map.get_neighbor_position ~pos:front_pos ~adir with
+              None ->
+              [Event.Attack_to (chid, (front_pos,
+                                       Combat.create ~attack_status:status ~attack_name:spell_name))]
+            | Some next_pos ->
+              [Event.Attack_to (chid, (front_pos,
+                                       Combat.create ~attack_status:status ~attack_name:spell_name));
+              Event.Attack_to (chid, (next_pos,
+                                       Combat.create ~attack_status:status ~attack_name:spell_name))])
 
     method listen ~msg ~achid =
       let name =
@@ -173,12 +187,12 @@ let create ~phirc ~cid ~chid =
       let adir = Phi_map.get_chara_absolute_direction ~chara_id:chid in
       match Phi_map.get_neighbor_position ~pos ~adir with
           None -> []
-        | Some front_pos -> [Event.Attack_to (chid, (front_pos, Combat.create ~attack_status:status))]
+        | Some front_pos -> [Event.Attack_to (chid, (front_pos, Combat.create ~attack_status:status ~attack_name:"knuckle"))]
 
     method private send_attack_messages aname dname result_list =
       let result_to_message = function
-          Combat.Hp_damage value ->
-          Dm_message.make (Dm_message.Attack_hp (aname, dname, "knuckle", value))
+          Combat.Hp_damage (value, attack_name) ->
+          Dm_message.make (Dm_message.Attack_hp (aname, dname, attack_name, value))
         | Combat.Kill ->
           Dm_message.make (Dm_message.Kill_by (aname, dname))
       in
