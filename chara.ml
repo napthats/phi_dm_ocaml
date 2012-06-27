@@ -9,6 +9,7 @@ t = <get_name : string;
      get_status_view : Chara_status.view;
      get_item_list : (Item.t * equip_flag option) list;
      get_chara_id : Chara_id.t;
+     get_spell_list : Spell.t list;
      sight_change : sight_change_type -> Event.t list;
      sight_update : Event.t list;
      turn : dir:Phi_map.direction -> Event.t list;
@@ -23,4 +24,5 @@ t = <get_name : string;
      say : msg:string -> Event.t list;
      listen : msg:string -> achid:Chara_id.t -> Event.t list;
      use_item : item:Item.t -> Event.t list;
-     unequip_item : item:Item.t -> Event.t list>
+     unequip_item : item:Item.t -> Event.t list;
+     cast : spell:Spell.t -> Event.t list>

@@ -3,6 +3,7 @@ type t =
   get_status_view : Chara_status.view;
   get_item_list : (Item.t * Chara.equip_flag option) list;
   get_chara_id : Chara_id.t;
+  get_spell_list : Spell.t list;
   sight_change : Chara.sight_change_type -> Event.t list;
   sight_update : Event.t list;
   turn : dir:Phi_map.direction -> Event.t list;
@@ -17,7 +18,8 @@ type t =
   say : msg:string -> Event.t list;
   listen : msg:string -> achid:Chara_id.t -> Event.t list;
   use_item : item:Item.t -> Event.t list;
-  unequip_item : item:Item.t -> Event.t list>
+  unequip_item : item:Item.t -> Event.t list;
+  cast : spell:Spell.t -> Event.t list>
 
 val create :
   chid : Chara_id.t ->

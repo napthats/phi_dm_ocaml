@@ -1,14 +1,16 @@
-type list_select_type = Get | Use | Unequip
+type list_select_type = Get | Use | Unequip | Spell
 
 type command_st = 
     Normal
   | List_select of list_select_type
+  | Cast of (Spell.t * int)
 
 type t = 
     <get_name : string;
   get_status_view : Chara_status.view;
   get_item_list : (Item.t * Chara.equip_flag option) list;
   get_chara_id : Chara_id.t;
+  get_spell_list : Spell.t list;
   sight_change : Chara.sight_change_type -> Event.t list;
   sight_update : Event.t list;
   turn : dir:Phi_map.direction -> Event.t list;
@@ -24,6 +26,7 @@ type t =
   listen : msg:string -> achid:Chara_id.t -> Event.t list;
   use_item : item:Item.t -> Event.t list;
   unequip_item : item:Item.t -> Event.t list;
+  cast : spell:Spell.t -> Event.t list;
 
   get_command_st : command_st;
   set_command_st : st:command_st -> unit;
@@ -34,3 +37,5 @@ val create :
   cid : Tcp_server.client_id ->
   chid : Chara_id.t ->
   t option
+
+

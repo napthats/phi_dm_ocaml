@@ -8,6 +8,7 @@ type raw_client_protocol =
   | Unequip
   | Check
   | Exit
+  | Cast
 
 type sharp_client_protocol =
     Open of string

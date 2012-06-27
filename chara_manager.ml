@@ -12,42 +12,31 @@ let execute_raw_client_protocol (cid, pc, protocol) =
       (match protocol with
           Protocol.Raw_message msg ->
           (try
-            (let ord = (int_of_string msg) - 1 in
-             let item_list = (match select_type with
+             let f list succeed_action fail_msg =
+               let ord = (int_of_string msg) - 1 in
+               if ord >= 0 && ord < (List.length list)
+               then succeed_action (List.nth list ord)
+               else (Client_manager.send_message ~cid ~msg:fail_msg; [])
+             in
+             pc#set_command_st ~st:Player_character.Normal;
+             (match select_type with
                  Player_character.Get ->
                  let pos = Phi_map.get_chara_position ~chara_id:pc#get_chara_id in
-                 Phi_map.get_item_list_with_position ~pos
+                 f (Phi_map.get_item_list_with_position ~pos)
+                   (fun item -> pc#item_get ~item) (Dm_message.make Dm_message.Get_no)
                | Player_character.Use ->
-                 (List.map fst pc#get_item_list)
+                 f (List.map fst pc#get_item_list)
+                   (fun item -> pc#use_item ~item) (Dm_message.make Dm_message.Use_no)
                | Player_character.Unequip ->
-                 (List.filter_map 
-                    (fun (item, eflag) -> match eflag with
-                        None -> None
-                      | Some _ -> Some item) 
-                    pc#get_item_list))
-             in
-             if ord >= 0 && ord < (List.length item_list)
-             then
-               (pc#set_command_st ~st:Player_character.Normal;
-                (match select_type with
-                    Player_character.Get ->
-                    pc#item_get ~item:(List.nth item_list ord)
-                  | Player_character.Unequip ->
-                    pc#unequip_item ~item:(List.nth item_list ord)
-                  | Player_character.Use ->
-                    pc#use_item ~item:(List.nth item_list ord)))
-             else
-               (pc#set_command_st ~st:Player_character.Normal;
-                Client_manager.send_message ~cid
-                  ~msg:(match select_type with
-                      Player_character.Get ->
-                      Dm_message.make Dm_message.Get_no
-                    | Player_character.Use ->
-                      Dm_message.make Dm_message.Use_no
-                    | Player_character.Unequip ->
-                      Dm_message.make Dm_message.Unequip_no                      
-                  );
-                []))
+                 f (List.filter_map 
+                      (fun (item, eflag) -> match eflag with
+                          None -> None
+                        | Some _ -> Some item) 
+                      pc#get_item_list)
+                   (fun item -> pc#unequip_item ~item) (Dm_message.make Dm_message.Unequip_no)
+               | Player_character.Spell ->
+                 f pc#get_spell_list
+                   (fun spell -> pc#cast ~spell) (Dm_message.make Dm_message.Spell_no))
           with
               Failure "int_of_string" ->
                 pc#set_command_st ~st:Player_character.Normal;
@@ -57,11 +46,17 @@ let execute_raw_client_protocol (cid, pc, protocol) =
           )
         | Protocol.Go _ | Protocol.Turn _ | Protocol.Hit
         | Protocol.Get _ | Protocol.Check | Protocol.Exit 
-        | Protocol.Use _ | Protocol.Unequip ->
+        | Protocol.Use _ | Protocol.Unequip | Protocol.Cast ->
           pc#set_command_st ~st:Player_character.Normal;
           Client_manager.send_message ~cid
             ~msg:(Dm_message.make Dm_message.Cancel_list_select);
           [])
+
+    | Player_character.Cast _ ->
+      Client_manager.send_message ~cid
+        ~msg:(Dm_message.make Dm_message.Cast_stop);
+      pc#set_command_st ~st:Player_character.Normal;
+      []
       
     | Player_character.Normal ->
       (match protocol with
@@ -120,6 +115,21 @@ let execute_raw_client_protocol (cid, pc, protocol) =
                 ~st:(Player_character.List_select Player_character.Unequip);
               []
           )
+
+        | Protocol.Cast ->
+          (match pc#get_spell_list with
+              [] ->
+                Client_manager.send_message ~cid ~msg:
+                  (Dm_message.make Dm_message.Spell_no);
+                []
+            | spell_list ->
+              Client_manager.send_message ~cid ~msg:
+                (Dm_message.make (Dm_message.Spell_list (List.map (fun spell -> Spell.get_name ~spell) spell_list)));
+              Client_manager.send_message ~cid ~msg:
+                (Dm_message.make Dm_message.Cast_select);
+              pc#set_command_st
+                ~st:(Player_character.List_select Player_character.Spell);
+              [])
 
         | Protocol.Use item ->
           (match item with

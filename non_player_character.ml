@@ -6,6 +6,7 @@ type t =
   get_status_view : Chara_status.view;
   get_item_list : (Item.t * Chara.equip_flag option) list;
   get_chara_id : Chara_id.t;
+  get_spell_list : Spell.t list;
   sight_change : Chara.sight_change_type -> Event.t list;
   sight_update : Event.t list;
   turn : dir:Phi_map.direction -> Event.t list;
@@ -20,7 +21,8 @@ type t =
   say : msg:string -> Event.t list;
   listen : msg:string -> achid:Chara_id.t -> Event.t list;
   use_item : item:Item.t -> Event.t list;
-  unequip_item : item:Item.t -> Event.t list>
+  unequip_item : item:Item.t -> Event.t list;
+  cast : spell:Spell.t -> Event.t list>
 
 let adirs = [|Phi_map.North; Phi_map.East; Phi_map.West; Phi_map.South|];;
 
@@ -36,6 +38,14 @@ let create ~chid =
     method get_name = "npc " ^ (string_of_int (Chara_id.to_num ~id:chid))
     method sight_change _ = []
     method get_chara_id = chid
+
+    method cast ~spell:_ =
+      print_endline "not inplemented: non_player_character cast";
+      []      
+
+    method get_spell_list =
+      print_endline "not inplemented: non_player_character get_spell_list";
+      []
    
     method unequip_item ~item:_ =
       print_endline "not inplemented: non_player_character unequip";

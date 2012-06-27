@@ -2,17 +2,19 @@ open Chara_status.Open
 open Item.Open
 
 
-type list_select_type = Get | Use | Unequip
+type list_select_type = Get | Use | Unequip | Spell
 
 type command_st = 
     Normal
   | List_select of list_select_type
+  | Cast of (Spell.t * int)
 
 type t = 
     <get_name : string;
   get_status_view : Chara_status.view;
   get_item_list : (Item.t * Chara.equip_flag option) list;
   get_chara_id : Chara_id.t;
+  get_spell_list : Spell.t list;
   sight_change : Chara.sight_change_type -> Event.t list;
   sight_update : Event.t list;
   turn : dir:Phi_map.direction -> Event.t list;
@@ -28,6 +30,7 @@ type t =
   listen : msg:string -> achid:Chara_id.t -> Event.t list;
   use_item : item:Item.t -> Event.t list;
   unequip_item : item:Item.t -> Event.t list;
+  cast : spell:Spell.t -> Event.t list;
 
   set_command_st : st:command_st -> unit;
   get_command_st : command_st;
@@ -42,7 +45,7 @@ let client_map_center = (3, 4);;
 let create ~phirc ~cid ~chid = 
   match Player_character_db.load ~phirc with
       None -> None
-    | Some (name, pos, adir, status, item_list) ->
+    | Some (name, pos, adir, status, item_list, spell_list) ->
 
   let chara = object (self)
     val cid = cid
@@ -52,10 +55,13 @@ let create ~phirc ~cid ~chid =
       Chara_status.create ~view:status
     val mutable item_list = List.map (fun item -> (item, None)) item_list
     val mutable command_st = Normal
+    val mutable spell_list = spell_list
 
     method get_name = name
     method get_phirc = phirc
     method get_chara_id = chid
+    method get_spell_list = spell_list
+
     method sight_change = function
         Chara.Appear_chara (_, _) ->
           ignore (self#sight_update);
@@ -66,6 +72,11 @@ let create ~phirc ~cid ~chid =
       | Chara.Disappear_chara (_, _) ->
           ignore (self#sight_update);
         []
+
+    method cast ~spell =
+      command_st <- Cast (spell, (Spell.get_view ~spell).Spell.cast_time);
+      self#send_message (Dm_message.make (Dm_message.Cast_now self#get_name));
+      []
 
     method turn ~dir =
       let adir =
@@ -101,6 +112,16 @@ let create ~phirc ~cid ~chid =
           [event]
 
     method do_action =
+      match command_st with
+          Cast (spell, count) ->
+            if count > 0
+            then (command_st <- Cast (spell, count-1); [])
+            else (self#complete_spell spell)
+        | List_select _ | Normal -> []
+
+    method private complete_spell _ =
+      self#send_message "complete!";
+      command_st <- Normal;
       []
 
     method listen ~msg ~achid =

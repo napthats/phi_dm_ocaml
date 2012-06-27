@@ -11,6 +11,7 @@ type raw_client_protocol =
   | Unequip
   | Check
   | Exit
+  | Cast
 
 type sharp_client_protocol =
     Open of string
@@ -53,10 +54,11 @@ let decode_raw_client_protocol protocol =
     | ["get"] -> Get None
     | "get" :: name_list -> Get (Some (String.concat " " name_list))
     | ["use"] -> Use None
-    | "get" :: name_list -> Use (Some (String.concat " " name_list))
+    | "use" :: name_list -> Use (Some (String.concat " " name_list))
     | ["check"] -> Check
     | ["exit"] -> Exit
     | ["unequip"] -> Unequip
+    | ["cast"] -> Cast
     | _ -> Raw_message protocol
 
 

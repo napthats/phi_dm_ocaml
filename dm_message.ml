@@ -34,6 +34,11 @@ type msg_type =
   | Seeyou
   | Try_again
   | Dead
+  | Cast_now of string
+  | Spell_no
+  | Cast_select
+  | Cast_stop
+  | Spell_list of string list
 
 
 let make = function
@@ -67,7 +72,19 @@ let make = function
   | Unequip (name, item_name) -> "DM > " ^ name ^ " unequiped " ^ item_name ^ "."
   | Unequip_no -> "DM > Can not unequip."
   | Unequip_select -> "DM > Input item number to unequip."
+  | Spell_no -> "DM > Can not cast."
+  | Cast_select -> "DM > Input magic number or spell."
+  | Cast_now name -> "DM > " ^ name ^ " is being cast..."
+  | Cast_stop -> "DM > Stop casting."
   | Item_list name_list ->
+    String.rchop 
+      (snd 
+         (List.fold_left
+            (fun (ord, acc) name ->
+              (ord+1, acc ^ (Printf.sprintf "[%2d] %s" ord name) ^ "\n"))
+            (1, "")
+            name_list))
+  | Spell_list name_list ->
     String.rchop 
       (snd 
          (List.fold_left
