@@ -44,3 +44,5 @@ val delete_item : pos:position -> item:Item.t -> unit
 
 (* throw exeption if there is no chara with chara_id *)
 val get_chara_in_sight_list : chara_id:Chara_id.t -> (Chara_id.t * view_position * relative_direction) list
+
+val is_enterable : pos:position -> bool

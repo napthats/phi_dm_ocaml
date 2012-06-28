@@ -105,11 +105,17 @@ let create ~phirc ~cid ~chid =
             self#send_message (Dm_message.make Dm_message.Go_no);
             []
         | Some next_pos ->
-          let old_pos = Phi_map.get_chara_position ~chara_id:chid in
-          let event = Event.Position_change (chid, (Some old_pos, Some next_pos)) in
-          Phi_map.set_chara_position ~chara_id:chid ~pos:next_pos;
-          ignore (self#sight_update);
-          [event]
+          if Phi_map.is_enterable ~pos:next_pos
+          then 
+            (let old_pos = Phi_map.get_chara_position ~chara_id:chid in
+            let event = Event.Position_change (chid, (Some old_pos, Some next_pos)) in
+            Phi_map.set_chara_position ~chara_id:chid ~pos:next_pos;
+            ignore (self#sight_update);
+            [event])
+          else
+            (self#send_message (Dm_message.make Dm_message.Go_no);
+            [])
+
 
     method do_action =
       match command_st with

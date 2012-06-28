@@ -36,13 +36,13 @@ struct
         {name = "test item 1"; attack_range = Item.Forth; material = Item.Steel; weapon_type = Item.Sword; atp = 10; item_type =Item.Weapon {element = Item.Fire; er = 30; effect = Item.EFNone; special_effect = Item.SENone}})
     ;;
   let data =
-    ([|[|(Bars, ([], [])); (Door, ([], [item_debug])); (Flower, ([], [])); (Glass, ([], [])); (Grass, ([], [])); (Mist, ([], [])); (Mwall, ([], []))|];
-       [|(Bars, ([], [])); (Door, ([], [])); (Flower, ([], [])); (Glass, ([], [])); (Grass, ([], [])); (Mist, ([], [])); (Mwall, ([], []))|];
-       [|(Bars, ([], [])); (Door, ([], [])); (Flower, ([], [])); (Rock, ([], [])); (Grass, ([], [])); (Mist, ([], [])); (Mwall, ([], []))|];
-       [|(Bars, ([], [])); (Door, ([], [])); (Rock, ([], [])); (Glass, ([], [])); (Grass, ([], [])); (Mist, ([], [])); (Mwall, ([], []))|];
-       [|(Bars, ([], [])); (Door, ([], [])); (Rock, ([], [])); (Glass, ([], [])); (Rock, ([], [])); (Mist, ([], [])); (Mwall, ([], []))|];
-       [|(Bars, ([], [])); (Door, ([], [])); (Rock, ([], [])); (Rock, ([], [])); (Rock, ([], [])); (Mist, ([], [])); (Mwall, ([], []))|];
-       [|(Bars, ([], [])); (Door, ([], [])); (Flower, ([], [])); (Glass, ([], [])); (Grass, ([], [])); (Mist, ([], [])); (Mwall, ([], []))|];|])
+    ([|[|(Tgate, ([], [])); (Road, ([], [item_debug])); (Flower, ([], [])); (Bars, ([], [])); (Grass, ([], [])); (Mist, ([], [])); (Mwall, ([], []))|];
+       [|(Bars, ([], [])); (Road, ([], [])); (Flower, ([], [])); (Door, ([], [])); (Grass, ([], [])); (Mist, ([], [])); (Mwall, ([], []))|];
+       [|(Bars, ([], [])); (Road, ([], [])); (Flower, ([], [])); (Bars, ([], [])); (Grass, ([], [])); (Mist, ([], [])); (Mwall, ([], []))|];
+       [|(Bars, ([], [])); (Road, ([], [])); (Rock, ([], [])); (Road, ([], [])); (Grass, ([], [])); (Mist, ([], [])); (Mwall, ([], []))|];
+       [|(Bars, ([], [])); (Road, ([], [])); (Rock, ([], [])); (Road, ([], [])); (Rock, ([], [])); (Mist, ([], [])); (Mwall, ([], []))|];
+       [|(Bars, ([], [])); (Road, ([], [])); (Rock, ([], [])); (Rock, ([], [])); (Rock, ([], [])); (Mist, ([], [])); (Mwall, ([], []))|];
+       [|(Bars, ([], [])); (Road, ([], [])); (Flower, ([], [])); (Glass, ([], [])); (Grass, ([], [])); (Mist, ([], [])); (Mwall, ([], []))|];|])
   ;;
   let get_chip_view pos = fst data.(pos.py).(pos.px);;
   let set_chip_view pos chip_view = 
@@ -308,3 +308,8 @@ let get_chara_in_sight_list ~chara_id:chid =
     )
     (List.combine sight_pos_list (List.concat normal_sight_offset)))
 ;;
+
+let is_enterable ~pos =
+  match Map_data.get_chip_view pos with
+      Bars | Glass | Mwall | Rock | Unknown | Window | Wood | Wwall | Door_lock | Pcircle_lock -> false
+    | Door | Dummy | Flower | Grass | Mist | Pcircle | Road | Tgate | Water -> true
