@@ -1,6 +1,5 @@
 open ExtList
 open ExtHashtbl
-open Item.Open
 
 
 (* chara_id, chara *)

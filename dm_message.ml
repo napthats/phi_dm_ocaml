@@ -38,6 +38,7 @@ type msg_type =
   | Spell_no
   | Cast_select
   | Cast_stop
+  | Eatfood of (string * string * int)
   | Spell_list of string list
 
 
@@ -53,6 +54,9 @@ let make = function
   | Get_bad -> "DM > Can not get such a thing."
   | Get_no -> "DM > Can not get."
   | Use_no -> "DM > Can not use."
+  | Eatfood (chara_name, food_name, power) ->
+    "DM > " ^ chara_name ^ " is cured by " ^ food_name
+    ^ ". [/*color=+hp*/" ^ (string_of_int power) ^ "/*.*/ hp]"
   | Cancel_list_select -> "DM > Cancel list selecting."
   | Get (chara_name, item_name) -> "DM > " ^ chara_name ^ " gets " ^ item_name ^ "."
   | No_character -> " Your character is not here."

@@ -1,5 +1,4 @@
 open Chara_status.Open
-open Item.Open
 
 
 type list_select_type = Get | Use | Unequip | Spell
@@ -158,8 +157,8 @@ let create ~phirc ~cid ~chid =
 
     method use_item ~item =
       let view = Item.get_view ~item in
-      (match view.item_type with
-          Weapon _ ->
+      (match view.Item.item_type with
+          Item.Weapon _ ->
             item_list <-
               List.map 
               (fun (i, flag) ->
@@ -174,7 +173,16 @@ let create ~phirc ~cid ~chid =
               (Dm_message.make (Dm_message.Use(self#get_name, Item.get_name ~item)));
             self#send_message
              (Dm_message.make(Dm_message.Equip(self#get_name, Item.get_name ~item)));
-            [])
+            []
+        | Item.Food power ->
+          self#send_message
+            (Dm_message.make (Dm_message.Eatfood(self#get_name, Item.get_name ~item, power)));
+          let cure_point =
+            min power ((Chara_status.get_view ~status).mhp - (Chara_status.get_view ~status).hp)
+          in
+          status <- Chara_status.add_hp ~hp:cure_point ~status;
+          []
+      )
 
     method unequip_item ~item =
       item_list <-

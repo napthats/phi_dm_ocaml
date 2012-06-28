@@ -29,7 +29,10 @@ let get_view ~status = status;;
 
 let add_hp ~hp:old_hp ~status =
   {status with hp = status.hp + old_hp}
-;;
+
+let add_mp ~mp:old_mp ~status =
+  {status with mp = status.mp + old_mp}
+
 
 let is_dead ~status = status.hp <= 0 || status.mp <= 0;;
 

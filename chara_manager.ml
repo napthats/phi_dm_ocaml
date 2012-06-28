@@ -1,6 +1,5 @@
 open ExtList
 open ExtHashtbl
-open Item.Open
 
 
 let ($) f g x = f (g x);;
@@ -107,7 +106,7 @@ let execute_raw_client_protocol (cid, pc, protocol) =
               Client_manager.send_message ~cid ~msg:
                 (Dm_message.make (Dm_message.Item_list_with_equip
                                     (List.map 
-                                       (fun (item,e)->((Item.get_view ~item).name,e))
+                                       (fun (item,e)->((Item.get_view ~item).Item.name,e))
                                        item_list)));
               Client_manager.send_message ~cid ~msg:
                 (Dm_message.make Dm_message.Unequip_select);
@@ -143,7 +142,7 @@ let execute_raw_client_protocol (cid, pc, protocol) =
                     Client_manager.send_message ~cid ~msg:
                       (Dm_message.make (Dm_message.Item_list 
                                           (List.map 
-                                             (fun item -> (Item.get_view ~item).name)
+                                             (fun item -> (Item.get_view ~item).Item.name)
                                              item_list)));
                     Client_manager.send_message ~cid ~msg:
                       (Dm_message.make Dm_message.Use_select);
@@ -160,7 +159,7 @@ let execute_raw_client_protocol (cid, pc, protocol) =
                 | item_list ->
                   (match
                       List.find_all 
-                        (fun item -> (Item.get_view ~item).name = target_name)
+                        (fun item -> (Item.get_view ~item).Item.name = target_name)
                         item_list
                    with
                        [] ->
@@ -187,7 +186,7 @@ let execute_raw_client_protocol (cid, pc, protocol) =
                     Client_manager.send_message ~cid ~msg:
                       (Dm_message.make (Dm_message.Item_list 
                                           (List.map 
-                                             (fun item -> (Item.get_view ~item).name)
+                                             (fun item -> (Item.get_view ~item).Item.name)
                                              item_list)));
                     Client_manager.send_message ~cid ~msg:
                       (Dm_message.make Dm_message.Get_select);
@@ -204,7 +203,7 @@ let execute_raw_client_protocol (cid, pc, protocol) =
                 | item_list ->
                   (match
                       List.find_all 
-                        (fun item -> (Item.get_view ~item).name = target_name)
+                        (fun item -> (Item.get_view ~item).Item.name = target_name)
                         item_list
                    with
                        [] ->

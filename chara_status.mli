@@ -26,7 +26,10 @@ val create : view:view -> t
 
 val get_view : status:t -> view
 
+(* hp(mp) can exceed max hp(mp) *)
+
 val add_hp : hp:int -> status:t -> t
+val add_mp : mp:int -> status:t -> t
 
 val is_dead : status:t -> bool
 

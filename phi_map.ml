@@ -1,6 +1,5 @@
 open ExtHashtbl
 open ExtList
-open Item.Open
 
 
 let ($) f g x = f (g x);;
@@ -33,7 +32,7 @@ end
 struct
   let item_debug =
       Item.create ~view:(
-        {name = "test item 1"; attack_range = Item.Forth; material = Item.Steel; weapon_type = Item.Sword; atp = 10; item_type =Item.Weapon {element = Item.Fire; er = 30; effect = Item.EFNone; special_effect = Item.SENone}})
+        {Item.name = "test item 1"; Item.attack_range = Item.Forth; Item.material = Item.Steel; Item.weapon_type = Item.Sword; Item.atp = 10; Item.item_type =Item.Weapon {Item.element = Item.Fire; Item.er = 30; Item.effect = Item.EFNone; Item.special_effect = Item.SENone}})
     ;;
   let data =
     ([|[|(Tgate, ([], [])); (Road, ([], [item_debug])); (Flower, ([], [])); (Bars, ([], [])); (Grass, ([], [])); (Mist, ([], [])); (Mwall, ([], []))|];
