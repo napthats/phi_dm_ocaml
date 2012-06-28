@@ -91,10 +91,15 @@ let create ~chid =
       else
       if Random.int 10 < 5
       then
-          let random_adir = adirs.(Random.int 4) in
-          self#go ~dir:(Phi_map.Absolute_direction random_adir)
+        let adir = Phi_map.get_chara_absolute_direction ~chara_id:chid in
+        self#go ~dir:(Phi_map.Absolute_direction adir)
       else
-          self#hit
+        (if Random.int 10 < 5
+         then self#hit
+         else 
+            let random_adir = adirs.(Random.int 4) in
+            self#turn ~dir:(Phi_map.Absolute_direction random_adir)
+        )
 
     method hit =
       let pos = Phi_map.get_chara_position ~chara_id:chid in
