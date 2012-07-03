@@ -14,14 +14,18 @@ type relative_direction = Forth | Right | Left | Back;;
 
 type direction = Absolute_direction of absolute_direction | Relative_direction of relative_direction;;
 
-type mapchip_view = Bars | Door | Dummy | Flower | Glass | Grass | Mist | Mwall | Pcircle | Road | Rock | Tgate | Unknown | Water | Window | Wood | Wwall | Door_lock | Pcircle_lock
+type mapchip = Bars | Door | Dummy | Flower | Glass | Grass | Mist | Mwall | Pcircle | Road | Rock | Tgate | Unknown | Water | Window | Wood | Wwall | Door_lock | Pcircle_lock
+
+type flooritem = Normal
+
+type view = {chip : mapchip; item : flooritem option}
 
 
 (* throw exception if posistion isn't valid *)
 module Map_data :
 sig
-  val get_chip_view : position -> mapchip_view
-  val set_chip_view : position -> mapchip_view -> unit
+  val get_chip_view : position -> mapchip
+  val set_chip_view : position -> mapchip -> unit
   val get_chara_list : position -> Chara_id.t list
   val set_chara_list : position -> Chara_id.t list -> unit
   val get_item_list : position -> Item.t list
@@ -162,18 +166,22 @@ let cansee_check_ord = [(0, 0); (0, -1); (1, 0); (0, 1); (-1, 0); (0, -2); (1, -
 let get_mapview ~chara_id =
   let dir = Hashtbl.find charaid_dir_tbl chara_id in
   let pos = Hashtbl.find charaid_pos_tbl chara_id in
-  let all_view =
+  let all_view : view list list =
     List.map
       (List.map (fun (ox, oy) ->
         let p = {px = pos.px + ox; py = pos.py + oy} in
         if Map_data.is_valid_pos p
-        then Map_data.get_chip_view p
-        else Unknown))
+        then 
+          {chip=Map_data.get_chip_view p;
+           item = (match Map_data.get_item_list p with
+               [] -> None
+             | _ -> Some Normal)}
+        else {chip=Unknown; item=None}))
       (get_normal_sight_offset dir)
   in
-  let view =
+  let view : view list list =
     List.fold_left
-      (fun view (ox, oy) ->
+      (fun (view : view list list) (ox, oy) ->
         let nnth list x y = List.nth (List.nth list (y+4)) (x+3) in
         let set_nnth list x y elem =
           let list_y = List.concat (List.take 1 (List.drop (y+4) list)) in
@@ -194,25 +202,25 @@ let get_mapview ~chara_id =
           (match (ox, oy) with
               (0, 0) -> view
             | (0, _) ->
-                if is_transparent (nnth view 0 (oy - (oy / abs oy)))
+                if is_transparent (nnth view 0 (oy - (oy / abs oy))).chip
                 then view
-                else set_nnth view 0 oy Unknown
+                else set_nnth view 0 oy {chip=Unknown; item=None}
             | (_, 0) ->
-                if is_transparent (nnth view (ox - (ox / abs ox)) 0)
+                if is_transparent (nnth view (ox - (ox / abs ox)) 0).chip
                 then view
-                else set_nnth view ox 0 Unknown
+                else set_nnth view ox 0 {chip=Unknown; item=None}
             | _ ->
               if (dist <> 2) &&
-                (not (is_transparent (nnth view (ox-(ox/abs ox)) (oy-(oy/abs oy)))))
+                (not (is_transparent (nnth view (ox-(ox/abs ox)) (oy-(oy/abs oy))).chip))
               then
-                set_nnth view ox oy Unknown
+                set_nnth view ox oy {chip=Unknown; item=None}
               else
                 (
                   if (dist <> 3) &&
-                    (not (is_transparent (nnth view ox (oy-(oy/abs oy))))) &&
-                    (not (is_transparent (nnth view (ox-(ox/abs ox)) oy)))
+                    (not (is_transparent (nnth view ox (oy-(oy/abs oy))).chip)) &&
+                    (not (is_transparent (nnth view (ox-(ox/abs ox)) oy).chip))
                   then
-                    set_nnth view ox oy Unknown
+                    set_nnth view ox oy {chip=Unknown; item=None}
                   else
                     view
                 )
@@ -294,7 +302,7 @@ let get_chara_in_sight_list ~chara_id:chid =
   List.concat (List.map
     (fun (pos, (vx, vy)) ->
       if Map_data.is_valid_pos pos &&
-        List.nth (List.nth mapview (vy+4)) (vx+3) <> Unknown
+        (List.nth (List.nth mapview (vy+4)) (vx+3)).chip <> Unknown
       then
         List.map
           (fun chara_id ->

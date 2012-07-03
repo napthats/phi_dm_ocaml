@@ -71,7 +71,7 @@ let decode_client_protocol protocol =
 type object_type = B_obj | C_obj | F_obj;;
 
 type server_protocol =
-    M57_map of (Phi_map.absolute_direction * ((Phi_map.mapchip_view list) list))
+    M57_map of (Phi_map.absolute_direction * ((Phi_map.view list) list))
   | M57_obj of (object_type * int * int * Phi_map.relative_direction * string)
   | M57_end
 
@@ -140,7 +140,12 @@ let encode_server_protocol = function
            (fun line_acc line ->
              line_acc
              ^ List.fold_left
-               (fun acc chip -> acc ^ mapchip_view_to_string chip ^ (String.make 1 (Char.chr 128)))
+               (fun acc chip ->
+                 (match chip.Phi_map.item with
+                     None -> 
+                     acc ^ mapchip_view_to_string chip.Phi_map.chip ^ (String.make 1 (Char.chr 128))
+                   | Some Phi_map.Normal ->
+                     acc ^ mapchip_view_to_string chip.Phi_map.chip ^ (String.make 1 (Char.chr 224))))
                ""
                line
            )
