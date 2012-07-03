@@ -33,7 +33,10 @@ let create ~chid =
       Chara_status.create ~view:{hp = 100; mhp = 1200; mp = 100; mmp = 500;
                                  flv = 2000; wlv = 1; mlv = 2; clv = 3;
                                  state = Chara_status.Command; condition = []}
-    val mutable item_list = []
+    val mutable item_list =
+      if Random.int 10 < 1
+      then [(Item.create ~view:({Item.name = "Nuts"; Item.attack_range = Item.Forth; Item.material = Item.Wood; Item.weapon_type = Item.Sword; Item.atp = 10; Item.item_type = (Item.Food 250)}), None)]
+      else []
 
     method get_name = "npc " ^ (string_of_int (Chara_id.to_num ~id:chid))
     method sight_change _ = []
@@ -127,6 +130,9 @@ let create ~chid =
       []
 
     method dead =
+      ignore (List.map
+                (fun (item, _)-> Phi_map.add_item ~item ~pos:(Phi_map.get_chara_position ~chara_id:chid))
+                item_list);
       []
 
     method get_status_view =

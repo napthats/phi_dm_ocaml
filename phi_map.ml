@@ -266,7 +266,11 @@ let delete_chara ~chara_id:chid =
 let delete_item ~pos ~item =
   let item_list = Map_data.get_item_list pos in
   Map_data.set_item_list pos (List.remove item_list item)
-;;
+
+let add_item ~pos ~item =
+  let item_list = Map_data.get_item_list pos in
+  Map_data.set_item_list pos (item :: item_list)
+
 
 let get_item_list_with_position ~pos =
   Map_data.get_item_list pos
@@ -314,7 +318,7 @@ let get_chara_in_sight_list ~chara_id:chid =
       else []
     )
     (List.combine sight_pos_list (List.concat normal_sight_offset)))
-;;
+
 
 let is_enterable ~pos =
   match Map_data.get_chip_view pos with
