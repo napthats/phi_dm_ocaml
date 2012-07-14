@@ -21,6 +21,7 @@ type t =
   listen : msg:string -> achid:Chara_id.t -> Event.t list;
   use_item : item:Item.t -> Event.t list;
   unequip_item : item:Item.t -> Event.t list;
+  move : pos:Phi_map.position -> Event.t list;
   cast : spell:Spell.t -> Event.t list>
 
 val create :

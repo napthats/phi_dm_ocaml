@@ -255,6 +255,12 @@ let execute_event = function
     Event.Client_message (cid, client_message) ->
       execute_client_message (cid, client_message)
 
+  | Event.Switch_move (chid, pos) ->
+    (match Chara_data.get_chara chid with
+        None -> []
+      | Some chara -> chara#move ~pos
+    )    
+
   | Event.Tick ->
     List.concat (Chara_data.map (fun chara -> chara#do_action))
 

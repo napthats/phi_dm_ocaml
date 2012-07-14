@@ -65,6 +65,7 @@ type t =
   | Attack_result of ((Chara_id.t * Chara_id.t) * Combat.result list)
   | Dead of Chara_id.t
   | Say of (Chara_id.t * string)
+  | Switch_move of (Chara_id.t * position)
 (*  | Status_view_change of (Chara_manager.chara_id * Phi_map.position
                       * (Chara_manager.chara_status_view * Chara_manager.chara_status_view))
   | Time_tick of int *)

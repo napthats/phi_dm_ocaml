@@ -7,9 +7,9 @@ type weapon_type =
 
 type element = Earth | Light | Air | Spirit | Water | Fire | ELNone
 
-type effect = EFNone;;
+type effect = EFNone
 
-type special_effect = SENone;;
+type special_effect = SENone
 
 
 type weapon_view = {element : element; er : int; effect : effect; special_effect : special_effect}
@@ -20,11 +20,11 @@ type view =
     {name : string; attack_range : attack_range; material : material; weapon_type : weapon_type;
      atp : int; item_type : item_type}
 
-type t = view;;
+type t = view
 
 
-let create ~view = view;;
+let create ~view = view
 
-let get_view ~item = item;;
+let get_view ~item = item
 
-let get_name ~item = item.name;;
+let get_name ~item = item.name

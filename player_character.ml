@@ -29,6 +29,7 @@ type t =
   listen : msg:string -> achid:Chara_id.t -> Event.t list;
   use_item : item:Item.t -> Event.t list;
   unequip_item : item:Item.t -> Event.t list;
+  move : pos:Phi_map.position -> Event.t list;
   cast : spell:Spell.t -> Event.t list;
 
   set_command_st : st:command_st -> unit;
@@ -60,6 +61,12 @@ let create ~phirc ~cid ~chid =
     method get_phirc = phirc
     method get_chara_id = chid
     method get_spell_list = spell_list
+    method move ~pos:next_pos = 
+      let old_pos = Phi_map.get_chara_position ~chara_id:chid in
+      let event = Event.Position_change (chid, (Some old_pos, Some next_pos)) in
+      Phi_map.set_chara_position ~chara_id:chid ~pos:next_pos;
+      ignore (self#sight_update);
+      [event]
 
     method sight_change = function
         Chara.Appear_chara (_, _) ->

@@ -34,16 +34,23 @@ type t =
   | Attack_result of ((Chara_id.t * Chara_id.t) * Combat.result list)
   | Dead of Chara_id.t
   | Say of (Chara_id.t * string)
+  | Switch_move of (Chara_id.t * position)
 (*  | Status_view_change of (Chara_manager.chara_id * Phi_map.position
                       * (Chara_manager.chara_status_view * Chara_manager.chara_status_view))
   | Time_tick of int *)
 end
 end
-
 include Open
 
+module Switch =
+struct
+  type condition = Dummy
+  type result = Move of position
+  type t = (condition list * result)
+end
 
-(* throw exception if posistion isn't valid *)
+
+(* throw exception if posistion is invalid *)
 module Map_data :
 sig
   val get_chip_view : position -> mapchip
@@ -52,6 +59,8 @@ sig
   val set_chara_list : position -> Chara_id.t list -> unit
   val get_item_list : position -> Item.t list
   val set_item_list : position -> Item.t list -> unit
+  val get_switch_list : position -> Switch.t list
+  val set_switch_list : position -> Switch.t list -> unit
   val is_valid_pos : position -> bool
 end
 =
@@ -59,30 +68,43 @@ struct
   let item_debug =
       Item.create ~view:(
         {Item.name = "test item 1"; Item.attack_range = Item.Forth; Item.material = Item.Steel; Item.weapon_type = Item.Sword; Item.atp = 10; Item.item_type =Item.Weapon {Item.element = Item.Fire; Item.er = 30; Item.effect = Item.EFNone; Item.special_effect = Item.SENone}})
-    ;;
+
+  let switch_debug = ([], (Switch.Move {px=2;py=2}))
+    
   let data =
-    ([|[|(Tgate, ([], [])); (Road, ([], [item_debug])); (Flower, ([], [])); (Bars, ([], [])); (Grass, ([], [])); (Mist, ([], [])); (Mwall, ([], []))|];
-       [|(Bars, ([], [])); (Road, ([], [])); (Flower, ([], [])); (Door, ([], [])); (Grass, ([], [])); (Mist, ([], [])); (Mwall, ([], []))|];
-       [|(Bars, ([], [])); (Road, ([], [])); (Flower, ([], [])); (Bars, ([], [])); (Grass, ([], [])); (Mist, ([], [])); (Mwall, ([], []))|];
-       [|(Bars, ([], [])); (Road, ([], [])); (Rock, ([], [])); (Road, ([], [])); (Grass, ([], [])); (Mist, ([], [])); (Mwall, ([], []))|];
-       [|(Bars, ([], [])); (Road, ([], [])); (Rock, ([], [])); (Road, ([], [])); (Rock, ([], [])); (Mist, ([], [])); (Mwall, ([], []))|];
-       [|(Bars, ([], [])); (Road, ([], [])); (Rock, ([], [])); (Rock, ([], [])); (Rock, ([], [])); (Mist, ([], [])); (Mwall, ([], []))|];
-       [|(Bars, ([], [])); (Road, ([], [])); (Flower, ([], [])); (Glass, ([], [])); (Grass, ([], [])); (Mist, ([], [])); (Mwall, ([], []))|];|])
+    ([|[|(Tgate, ([], [], [])); (Road, ([], [item_debug], [])); (Flower, ([], [], [])); (Bars, ([], [], [])); (Grass, ([], [], [])); (Mist, ([], [], [])); (Mwall, ([], [], []))|];
+       [|(Bars, ([], [], [])); (Road, ([], [], [switch_debug])); (Flower, ([], [], [])); (Door, ([], [], [])); (Grass, ([], [], [])); (Mist, ([], [], [])); (Mwall, ([], [], []))|];
+       [|(Bars, ([], [], [])); (Road, ([], [], [])); (Flower, ([], [], [])); (Bars, ([], [], [])); (Grass, ([], [], [])); (Mist, ([], [], [])); (Mwall, ([], [], []))|];
+       [|(Bars, ([], [], [])); (Road, ([], [], [])); (Rock, ([], [], [])); (Road, ([], [], [])); (Grass, ([], [], [])); (Mist, ([], [], [])); (Mwall, ([], [], []))|];
+       [|(Bars, ([], [], [])); (Road, ([], [], [])); (Rock, ([], [], [])); (Road, ([], [], [])); (Rock, ([], [], [])); (Mist, ([], [], [])); (Mwall, ([], [], []))|];
+       [|(Bars, ([], [], [])); (Road, ([], [], [])); (Rock, ([], [], [])); (Rock, ([], [], [])); (Rock, ([], [], [])); (Mist, ([], [], [])); (Mwall, ([], [], []))|];
+       [|(Bars, ([], [], [])); (Road, ([], [], [])); (Flower, ([], [], [])); (Glass, ([], [], [])); (Grass, ([], [], [])); (Mist, ([], [], [])); (Mwall, ([], [], []))|];|])
   
   let get_chip_view pos = fst data.(pos.py).(pos.px)
   let set_chip_view pos chip_view = 
     let (_, lists) = data.(pos.py).(pos.px) in
     data.(pos.py).(pos.px) <- (chip_view, lists)
   
-  let get_chara_list pos = fst (snd data.(pos.py).(pos.px))
+  let get_chara_list pos =
+    match data.(pos.py).(pos.px) with
+        (_, (chara_list, _, _)) -> chara_list
   let set_chara_list pos chara_list = 
-    let (cv, (_, item_list)) = data.(pos.py).(pos.px) in
-    data.(pos.py).(pos.px) <- (cv, (chara_list, item_list))
+    let (cv, (_, item_list, switch_list)) = data.(pos.py).(pos.px) in
+    data.(pos.py).(pos.px) <- (cv, (chara_list, item_list, switch_list))
   
-  let get_item_list pos = snd (snd data.(pos.py).(pos.px))
+  let get_item_list pos =
+    match data.(pos.py).(pos.px) with
+        (_, (_, item_list, _)) -> item_list
   let set_item_list pos item_list = 
-    let (cv, (chara_list, _)) = data.(pos.py).(pos.px) in
-    data.(pos.py).(pos.px) <- (cv, (chara_list, item_list))
+    let (cv, (chara_list, _, switch_list)) = data.(pos.py).(pos.px) in
+    data.(pos.py).(pos.px) <- (cv, (chara_list, item_list, switch_list))
+
+  let get_switch_list pos =
+    match data.(pos.py).(pos.px) with
+        (_, (_, _, switch_list)) -> switch_list
+  let set_switch_list pos switch_list = 
+    let (cv, (chara_list, item_list, _)) = data.(pos.py).(pos.px) in
+    data.(pos.py).(pos.px) <- (cv, (chara_list, item_list, switch_list))
 
   let data_width = 7
 
@@ -315,7 +337,6 @@ let get_rdir_between_adir = function
   | (South, East) -> Left
   | (South, West) -> Right
   | (South, South) -> Back
-;;
 
 let get_chara_in_sight_list ~chara_id:chid =
   let pos = Hashtbl.find charaid_pos_tbl chid in
@@ -347,10 +368,22 @@ let is_enterable ~pos =
       Bars | Glass | Mwall | Rock | Unknown | Window | Wood | Wwall | Door_lock | Pcircle_lock -> false
     | Door | Dummy | Flower | Grass | Mist | Pcircle | Road | Tgate | Water -> true
 
+let switch_execute chid (cond_list, result) =
+  match cond_list with
+      [] ->
+      (match result with
+          Switch.Move pos -> [Event.Switch_move (chid, pos)]
+      )
+    | _ -> []
+
 let execute_event = function
     Event.Position_change (chid, (_, Some pos)) ->
-    []
-  | _ -> []
+    (match Map_data.get_switch_list pos with
+        [] -> []
+      | switch_list ->
+        List.concat (List.map (switch_execute chid) switch_list)
+    )
+  | Event.Client_message _ | Event.Position_change _ | Event.Npc_appear | Event.Tick | Event.Attack_to _ | Event.Attack_result _ | Event.Dead _ | Event.Say _ | Event.Switch_move _ -> []
 
 let event_dispatch ~event_list =
   List.concat (List.map execute_event event_list)
