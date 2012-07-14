@@ -3,8 +3,8 @@ open ExtString
 
 type raw_client_protocol =
     Raw_message of string
-  | Go of Phi_map.direction
-  | Turn of Phi_map.direction option
+  | Go of Phi_map_data.direction
+  | Turn of Phi_map_data.direction option
   | Hit
   | Get of string option
   | Use of string option
@@ -31,22 +31,22 @@ let string_to_direction = function
     "" -> None
   | str ->
     match str.[0] with
-        'n' -> Some (Phi_map.Absolute_direction Phi_map.North)
-      | 'e' -> Some (Phi_map.Absolute_direction Phi_map.East)
-      | 'w' -> Some (Phi_map.Absolute_direction Phi_map.West)
-      | 's' -> Some (Phi_map.Absolute_direction Phi_map.South)
-      | 'f' -> Some (Phi_map.Relative_direction Phi_map.Forth)
-      | 'r' -> Some (Phi_map.Relative_direction Phi_map.Right)
-      | 'l' -> Some (Phi_map.Relative_direction Phi_map.Left)
-      | 'b' -> Some (Phi_map.Relative_direction Phi_map.Back)
+        'n' -> Some (Phi_map_data.Absolute_direction Phi_map_data.North)
+      | 'e' -> Some (Phi_map_data.Absolute_direction Phi_map_data.East)
+      | 'w' -> Some (Phi_map_data.Absolute_direction Phi_map_data.West)
+      | 's' -> Some (Phi_map_data.Absolute_direction Phi_map_data.South)
+      | 'f' -> Some (Phi_map_data.Relative_direction Phi_map_data.Forth)
+      | 'r' -> Some (Phi_map_data.Relative_direction Phi_map_data.Right)
+      | 'l' -> Some (Phi_map_data.Relative_direction Phi_map_data.Left)
+      | 'b' -> Some (Phi_map_data.Relative_direction Phi_map_data.Back)
       | _ -> None
 
 let decode_raw_client_protocol protocol =
   match String.nsplit protocol " " with
-      ["go"] -> Go (Phi_map.Relative_direction Phi_map.Forth)
+      ["go"] -> Go (Phi_map_data.Relative_direction Phi_map_data.Forth)
     | ["go"; dir] ->
       (match string_to_direction dir with
-          None -> Go (Phi_map.Relative_direction Phi_map.Forth)
+          None -> Go (Phi_map_data.Relative_direction Phi_map_data.Forth)
         | Some d -> Go d)
     | ["turn"] -> Turn None
     | ["turn"; dir] -> Turn (string_to_direction dir)
@@ -71,36 +71,36 @@ let decode_client_protocol protocol =
 type object_type = B_obj | C_obj | F_obj;;
 
 type server_protocol =
-    M57_map of (Phi_map.absolute_direction * ((Phi_map.view list) list))
-  | M57_obj of (object_type * int * int * Phi_map.relative_direction * string)
+    M57_map of (Phi_map_data.absolute_direction * ((Phi_map_data.view list) list))
+  | M57_obj of (object_type * int * int * Phi_map_data.relative_direction * string)
   | M57_end
 
 let mapchip_view_to_string = function
-    Phi_map.Bars -> "I"
-  | Phi_map.Door -> "["
-  | Phi_map.Dummy -> "o"
-  | Phi_map.Flower -> "+"
-  | Phi_map.Glass -> "="
-  | Phi_map.Grass -> ":"
-  | Phi_map.Mist -> "/"
-  | Phi_map.Mwall -> "H"
-  | Phi_map.Pcircle -> "x"
-  | Phi_map.Road -> " "
-  | Phi_map.Rock -> "@"
-  | Phi_map.Tgate -> ">"
-  | Phi_map.Unknown -> "?"
-  | Phi_map.Water -> "_"
-  | Phi_map.Window -> "|"
-  | Phi_map.Wood -> "T"
-  | Phi_map.Wwall -> "#"
-  | Phi_map.Door_lock -> "{"
-  | Phi_map.Pcircle_lock -> "#"
+    Phi_map_data.Bars -> "I"
+  | Phi_map_data.Door -> "["
+  | Phi_map_data.Dummy -> "o"
+  | Phi_map_data.Flower -> "+"
+  | Phi_map_data.Glass -> "="
+  | Phi_map_data.Grass -> ":"
+  | Phi_map_data.Mist -> "/"
+  | Phi_map_data.Mwall -> "H"
+  | Phi_map_data.Pcircle -> "x"
+  | Phi_map_data.Road -> " "
+  | Phi_map_data.Rock -> "@"
+  | Phi_map_data.Tgate -> ">"
+  | Phi_map_data.Unknown -> "?"
+  | Phi_map_data.Water -> "_"
+  | Phi_map_data.Window -> "|"
+  | Phi_map_data.Wood -> "T"
+  | Phi_map_data.Wwall -> "#"
+  | Phi_map_data.Door_lock -> "{"
+  | Phi_map_data.Pcircle_lock -> "#"
 
 let absolute_direction_to_string = function
-    Phi_map.North -> "N"
-  | Phi_map.East -> "E"
-  | Phi_map.West -> "W"
-  | Phi_map.South -> "S"
+    Phi_map_data.North -> "N"
+  | Phi_map_data.East -> "E"
+  | Phi_map_data.West -> "W"
+  | Phi_map_data.South -> "S"
 
 let encode_server_protocol = function
     M57_end -> "#m57 ."
@@ -113,10 +113,10 @@ let encode_server_protocol = function
     in
     let dir_string =
       (match rdir with
-          Phi_map.Forth -> "F"
-        | Phi_map.Right -> "R"
-        | Phi_map.Left -> "L"
-        | Phi_map.Back -> "B")
+          Phi_map_data.Forth -> "F"
+        | Phi_map_data.Right -> "R"
+        | Phi_map_data.Left -> "L"
+        | Phi_map_data.Back -> "B")
     in
     Printf.sprintf
       "#m57 O %s0000:%d %d %s %-31s 00                 # 00"
@@ -141,11 +141,11 @@ let encode_server_protocol = function
              line_acc
              ^ List.fold_left
                (fun acc chip ->
-                 (match chip.Phi_map.item with
+                 (match chip.Phi_map_data.item with
                      None -> 
-                     acc ^ mapchip_view_to_string chip.Phi_map.chip ^ (String.make 1 (Char.chr 128))
-                   | Some Phi_map.Normal ->
-                     acc ^ mapchip_view_to_string chip.Phi_map.chip ^ (String.make 1 (Char.chr 224))))
+                     acc ^ mapchip_view_to_string chip.Phi_map_data.chip ^ (String.make 1 (Char.chr 128))
+                   | Some Phi_map_data.Normal ->
+                     acc ^ mapchip_view_to_string chip.Phi_map_data.chip ^ (String.make 1 (Char.chr 224))))
                ""
                line
            )

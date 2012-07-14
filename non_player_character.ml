@@ -1,5 +1,5 @@
 open Chara_status.Open
-
+open Phi_map.Open
 
 type t = 
     <get_name : string;
@@ -24,7 +24,7 @@ type t =
   unequip_item : item:Item.t -> Event.t list;
   cast : spell:Spell.t -> Event.t list>
 
-let adirs = [|Phi_map.North; Phi_map.East; Phi_map.West; Phi_map.South|];;
+let adirs = [|Phi_map_data.North; Phi_map_data.East; Phi_map_data.West; Phi_map_data.South|];;
 
 let create ~chid =
   let chara = object (self)
@@ -61,8 +61,8 @@ let create ~chid =
     method turn ~dir =
       let adir =
         (match dir with
-            Phi_map.Absolute_direction adir -> adir
-          | Phi_map.Relative_direction rdir ->
+            Phi_map_data.Absolute_direction adir -> adir
+          | Phi_map_data.Relative_direction rdir ->
             let adir = Phi_map.get_chara_absolute_direction ~chara_id:chid in
             Phi_map.turn_absolute_direction ~adir ~rdir
         )
@@ -73,9 +73,9 @@ let create ~chid =
     method go ~dir =
       let adir =
         match dir with
-            Phi_map.Absolute_direction adir -> adir
-          | Phi_map.Relative_direction rdir ->
-            let adir =Phi_map.get_chara_absolute_direction ~chara_id:chid in
+            Phi_map_data.Absolute_direction adir -> adir
+          | Phi_map_data.Relative_direction rdir ->
+            let adir = Phi_map.get_chara_absolute_direction ~chara_id:chid in
             Phi_map.turn_absolute_direction ~adir ~rdir
       in
       let pos = Phi_map.get_chara_position ~chara_id:chid in
@@ -95,13 +95,13 @@ let create ~chid =
       if Random.int 10 < 5
       then
         let adir = Phi_map.get_chara_absolute_direction ~chara_id:chid in
-        self#go ~dir:(Phi_map.Absolute_direction adir)
+        self#go ~dir:(Phi_map_data.Absolute_direction adir)
       else
         (if Random.int 10 < 5
          then self#hit
          else 
             let random_adir = adirs.(Random.int 4) in
-            self#turn ~dir:(Phi_map.Absolute_direction random_adir)
+            self#turn ~dir:(Phi_map_data.Absolute_direction random_adir)
         )
 
     method hit =
@@ -130,8 +130,9 @@ let create ~chid =
       []
 
     method dead =
+      let pos = Phi_map.get_chara_position ~chara_id:chid in
       ignore (List.map
-                (fun (item, _)-> Phi_map.add_item ~item ~pos:(Phi_map.get_chara_position ~chara_id:chid))
+                (fun (item, _)-> Phi_map.add_item ~item ~pos)
                 item_list);
       []
 
@@ -151,7 +152,7 @@ let create ~chid =
     
   end in
   let pos = Phi_map.get_default_position in (* tentative *)
-  let adir = Phi_map.North in (* tentative *)
+  let adir = Phi_map_data.North in (* tentative *)
   Phi_map.set_chara_position ~chara_id:chid ~pos;
   Phi_map.set_chara_direction ~chara_id:chid ~adir;
   Chara_name_cache.set_name ~chid ~name:chara#get_name;

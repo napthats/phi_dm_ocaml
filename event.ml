@@ -10,4 +10,4 @@ type t =
 (*  | Status_view_change of (Chara_manager.chara_id * Phi_map.position
                       * (Chara_manager.chara_status_view * Chara_manager.chara_status_view))
   | Time_tick of int *)
-;;
+

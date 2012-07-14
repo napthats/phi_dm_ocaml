@@ -1,18 +1,19 @@
+
+type view_position = Phi_map_data.view_position
+
+type absolute_direction = Phi_map_data.absolute_direction
+
+type relative_direction = Phi_map_data.relative_direction
+
+type direction = Phi_map_data.direction
+
+type mapchip = Phi_map_data.mapchip
+
+type flooritem = Phi_map_data.flooritem
+
+type view = Phi_map_data.view
+
 type position
-
-type view_position = {x : int; y : int}
-
-type absolute_direction = North | East | West | South
-
-type relative_direction = Forth | Right | Left | Back
-
-type direction = Absolute_direction of absolute_direction | Relative_direction of relative_direction
-
-type mapchip = Bars | Door | Dummy | Flower | Glass | Grass | Mist | Mwall | Pcircle | Road | Rock | Tgate | Unknown | Water | Window | Wood | Wwall | Door_lock | Pcircle_lock
-
-type flooritem = Normal
-
-type view = {chip : mapchip; item : flooritem option}
 
 val get_cansee_chara_list : pos:position -> (Chara_id.t * view_position) list
 
@@ -52,3 +53,22 @@ val add_item : pos:position -> item:Item.t -> unit
 val get_chara_in_sight_list : chara_id:Chara_id.t -> (Chara_id.t * view_position * relative_direction) list
 
 val is_enterable : pos:position -> bool
+
+module Open : sig
+module Event : sig
+type t =
+    Client_message of (Tcp_server.client_id * Protocol.client_protocol) 
+  | Position_change of (Chara_id.t * (position option * position option))
+  | Npc_appear
+  | Tick
+  | Attack_to of (Chara_id.t * (position * Combat.t))
+  | Attack_result of ((Chara_id.t * Chara_id.t) * Combat.result list)
+  | Dead of Chara_id.t
+  | Say of (Chara_id.t * string)
+(*  | Status_view_change of (Chara_manager.chara_id * Phi_map.position
+                      * (Chara_manager.chara_status_view * Chara_manager.chara_status_view))
+  | Time_tick of int *)
+end
+end
+
+val event_dispatch : event_list:Open.Event.t list -> Open.Event.t list

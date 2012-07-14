@@ -1,24 +1,46 @@
 open ExtHashtbl
 open ExtList
+open Phi_map_data
 
 
-let ($) f g x = f (g x);;
 
-type position = {px : int; py : int};;
 
-type view_position = {x : int; y : int};;
+let ($) f g x = f (g x)
 
-type absolute_direction = North | East | West | South;;
+type position = {px : int; py : int}
 
-type relative_direction = Forth | Right | Left | Back;;
+type view_position = Phi_map_data.view_position
 
-type direction = Absolute_direction of absolute_direction | Relative_direction of relative_direction;;
+type absolute_direction = Phi_map_data.absolute_direction
 
-type mapchip = Bars | Door | Dummy | Flower | Glass | Grass | Mist | Mwall | Pcircle | Road | Rock | Tgate | Unknown | Water | Window | Wood | Wwall | Door_lock | Pcircle_lock
+type relative_direction = Phi_map_data.relative_direction
 
-type flooritem = Normal
+type direction = Phi_map_data.direction
 
-type view = {chip : mapchip; item : flooritem option}
+type mapchip = Phi_map_data.mapchip
+
+type flooritem = Phi_map_data.flooritem
+
+type view = Phi_map_data.view
+
+module Open = struct
+module Event = struct
+type t =
+    Client_message of (Tcp_server.client_id * Protocol.client_protocol) 
+  | Position_change of (Chara_id.t * (position option * position option))
+  | Npc_appear
+  | Tick
+  | Attack_to of (Chara_id.t * (position * Combat.t))
+  | Attack_result of ((Chara_id.t * Chara_id.t) * Combat.result list)
+  | Dead of Chara_id.t
+  | Say of (Chara_id.t * string)
+(*  | Status_view_change of (Chara_manager.chara_id * Phi_map.position
+                      * (Chara_manager.chara_status_view * Chara_manager.chara_status_view))
+  | Time_tick of int *)
+end
+end
+
+include Open
 
 
 (* throw exception if posistion isn't valid *)
@@ -46,18 +68,18 @@ struct
        [|(Bars, ([], [])); (Road, ([], [])); (Rock, ([], [])); (Road, ([], [])); (Rock, ([], [])); (Mist, ([], [])); (Mwall, ([], []))|];
        [|(Bars, ([], [])); (Road, ([], [])); (Rock, ([], [])); (Rock, ([], [])); (Rock, ([], [])); (Mist, ([], [])); (Mwall, ([], []))|];
        [|(Bars, ([], [])); (Road, ([], [])); (Flower, ([], [])); (Glass, ([], [])); (Grass, ([], [])); (Mist, ([], [])); (Mwall, ([], []))|];|])
-  ;;
-  let get_chip_view pos = fst data.(pos.py).(pos.px);;
+  
+  let get_chip_view pos = fst data.(pos.py).(pos.px)
   let set_chip_view pos chip_view = 
     let (_, lists) = data.(pos.py).(pos.px) in
     data.(pos.py).(pos.px) <- (chip_view, lists)
-  ;;
-  let get_chara_list pos = fst (snd data.(pos.py).(pos.px));;
+  
+  let get_chara_list pos = fst (snd data.(pos.py).(pos.px))
   let set_chara_list pos chara_list = 
     let (cv, (_, item_list)) = data.(pos.py).(pos.px) in
     data.(pos.py).(pos.px) <- (cv, (chara_list, item_list))
-  ;;
-  let get_item_list pos = snd (snd data.(pos.py).(pos.px));;
+  
+  let get_item_list pos = snd (snd data.(pos.py).(pos.px))
   let set_item_list pos item_list = 
     let (cv, (chara_list, _)) = data.(pos.py).(pos.px) in
     data.(pos.py).(pos.px) <- (cv, (chara_list, item_list))
@@ -105,18 +127,18 @@ let turn_absolute_direction ~adir ~rdir =
     | (South, Right) -> West
     | (South, Left) -> East
     | (South, Back) -> North
-;;
+
 
 let set_chara_direction ~chara_id ~adir =
   Hashtbl.replace charaid_dir_tbl chara_id adir
-;;
+
 
 let adir_to_offset = function
     North -> (0, -1)
   | East -> (1, 0)
   | West -> (-1, 0)
   | South -> (0, 1)
-;;
+
 
 
 let get_neighbor_position ~pos ~adir =
@@ -125,21 +147,21 @@ let get_neighbor_position ~pos ~adir =
   if Map_data.is_valid_pos new_pos
   then Some new_pos
   else None
-;;
+
 
 let get_chara_position ~chara_id =
   match Hashtbl.find_all charaid_pos_tbl chara_id with
       [] -> assert false
     | [pos] -> pos
     | _ -> assert false
-;;
+
 
 let get_chara_absolute_direction ~chara_id =
   match Hashtbl.find_all charaid_dir_tbl chara_id with
       [] -> assert false
     | [dir] -> dir
     | _ -> assert false
-;;
+
 
 let normal_sight_offset =
   [[(-3, -4); (-2, -4); (-1, -4); (0, -4); (1, -4); (2, -4); (3, -4)]
@@ -149,7 +171,7 @@ let normal_sight_offset =
   ;[(-3, 0); (-2, 0); (-1, 0); (0, 0); (1, 0); (2, 0); (3, 0)]
   ;[(-3, 1); (-2, 1); (-1, 1); (0, 1); (1, 1); (2, 1); (3, 1)]
   ;[(-3, 2); (-2, 2); (-1, 2); (0, 2); (1, 2); (2, 2); (3, 2)]]
-;;
+
 
 let get_normal_sight_offset = function
     North -> normal_sight_offset
@@ -324,3 +346,11 @@ let is_enterable ~pos =
   match Map_data.get_chip_view pos with
       Bars | Glass | Mwall | Rock | Unknown | Window | Wood | Wwall | Door_lock | Pcircle_lock -> false
     | Door | Dummy | Flower | Grass | Mist | Pcircle | Road | Tgate | Water -> true
+
+let execute_event = function
+    Event.Position_change (chid, (_, Some pos)) ->
+    []
+  | _ -> []
+
+let event_dispatch ~event_list =
+  List.concat (List.map execute_event event_list)

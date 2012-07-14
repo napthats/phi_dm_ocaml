@@ -5,7 +5,7 @@ let db = Hashtbl.create 100;;
 let _ = Hashtbl.replace db "guest1"
   ("guest 1",
    Phi_map.get_default_position,
-   Phi_map.North,
+   Phi_map_data.North,
    {hp = 5000; mhp = 5200; mp = 5100; mmp = 5500;
     flv = 120; wlv = 1; mlv = 2; clv = 3;
     state = Chara_status.Command; condition = []},
@@ -15,7 +15,7 @@ let _ = Hashtbl.replace db "guest1"
 let _ = Hashtbl.replace db "guest2"
   ("guest 2",
    Phi_map.get_default_position,
-   Phi_map.South,
+   Phi_map_data.South,
    {hp = 100; mhp = 5200; mp = 5100; mmp = 5500;
     flv = 1200; wlv = 1; mlv = 2; clv = 3;
     state = Chara_status.Command; condition = []},

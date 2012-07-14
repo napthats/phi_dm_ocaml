@@ -1,3 +1,5 @@
+open Phi_map.Open
+
 type list_select_type = Get | Use | Unequip | Spell
 
 type command_st = 

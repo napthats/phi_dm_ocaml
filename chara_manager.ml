@@ -1,6 +1,6 @@
 open ExtList
 open ExtHashtbl
-
+open Phi_map.Open
 
 let ($) f g x = f (g x);;
 
@@ -293,6 +293,7 @@ let execute_event = function
         None -> []
       | Some chara ->
         let dead_event_list = chara#dead in
+(*        let pos = Phi_map.get_chara_position ~chara_id:chid in*)
         List.append dead_event_list (Chara_data.remove_chara chid)
     )
 
@@ -361,5 +362,5 @@ let execute_event = function
 
 let event_dispatch ~event_list =
   List.concat (List.map execute_event event_list)
-;;
+
 

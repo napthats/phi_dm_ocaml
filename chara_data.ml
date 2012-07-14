@@ -1,6 +1,6 @@
 open ExtList
 open ExtHashtbl
-
+open Phi_map.Open
 
 (* chara_id, chara *)
 let npc_tbl = Hashtbl.create 100

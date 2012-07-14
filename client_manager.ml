@@ -1,3 +1,5 @@
+open Phi_map.Open
+
 let server = new Tcp_server.tcp_server 20017
 let _ = server#listen
 

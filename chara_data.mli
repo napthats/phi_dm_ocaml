@@ -1,3 +1,5 @@
+open Phi_map.Open
+
 val get_chara : Chara_id.t -> Chara.t option
 val get_pc_by_cid : Tcp_server.client_id -> Player_character.t option
 val get_pc_by_phirc : string -> Player_character.t option

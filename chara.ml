@@ -1,9 +1,11 @@
+open Phi_map.Open
+
 type equip_flag = Wpn | Arm | Acr
 
 type sight_change_type =
-    Appear_chara of (t * Phi_map.view_position)
-  | Move_chara of (t * (Phi_map.view_position * Phi_map.view_position))
-  | Disappear_chara of (t * Phi_map.view_position)
+    Appear_chara of (t * Phi_map_data.view_position)
+  | Move_chara of (t * (Phi_map_data.view_position * Phi_map_data.view_position))
+  | Disappear_chara of (t * Phi_map_data.view_position)
 and
 t = <get_name : string;
      get_status_view : Chara_status.view;
@@ -12,8 +14,8 @@ t = <get_name : string;
      get_spell_list : Spell.t list;
      sight_change : sight_change_type -> Event.t list;
      sight_update : Event.t list;
-     turn : dir:Phi_map.direction -> Event.t list;
-     go : dir:Phi_map.direction -> Event.t list;
+     turn : dir:Phi_map_data.direction -> Event.t list;
+     go : dir:Phi_map_data.direction -> Event.t list;
      do_action : Event.t list;
      hit : Event.t list;
      defense : combat:Combat.t -> achid:Chara_id.t -> Event.t list;

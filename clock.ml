@@ -1,3 +1,5 @@
+open Phi_map.Open
+
 let current_tick = ref 0;;
 
 let tick () =

@@ -1,5 +1,5 @@
 open Chara_status.Open
-
+open Phi_map.Open
 
 type list_select_type = Get | Use | Unequip | Spell
 
@@ -63,13 +63,13 @@ let create ~phirc ~cid ~chid =
 
     method sight_change = function
         Chara.Appear_chara (_, _) ->
-          ignore (self#sight_update);
+        ignore (self#sight_update);
           []
       | Chara.Move_chara (_, (_, _)) ->
-          ignore (self#sight_update);
+        ignore (self#sight_update);
         []
       | Chara.Disappear_chara (_, _) ->
-          ignore (self#sight_update);
+        ignore (self#sight_update);
         []
 
     method cast ~spell =
@@ -80,8 +80,8 @@ let create ~phirc ~cid ~chid =
     method turn ~dir =
       let adir =
         (match dir with
-            Phi_map.Absolute_direction adir -> adir
-          | Phi_map.Relative_direction rdir ->
+            Phi_map_data.Absolute_direction adir -> adir
+          | Phi_map_data.Relative_direction rdir ->
             let adir = Phi_map.get_chara_absolute_direction ~chara_id:chid in
             Phi_map.turn_absolute_direction ~adir ~rdir
         )
@@ -93,8 +93,8 @@ let create ~phirc ~cid ~chid =
     method go ~dir =
       let adir =
         match dir with
-            Phi_map.Absolute_direction adir -> adir
-          | Phi_map.Relative_direction rdir ->
+            Phi_map_data.Absolute_direction adir -> adir
+          | Phi_map_data.Relative_direction rdir ->
             let adir = Phi_map.get_chara_absolute_direction ~chara_id:chid in
             Phi_map.turn_absolute_direction ~adir ~rdir
       in
@@ -282,8 +282,8 @@ let create ~phirc ~cid ~chid =
             (Protocol.encode_server_protocol
                (Protocol.M57_obj 
                   (Protocol.C_obj,
-                   ((fst client_map_center) + vp.Phi_map.x),
-                   ((snd client_map_center) + vp.Phi_map.y),
+                   ((fst client_map_center) + vp.Phi_map_data.x),
+                   ((snd client_map_center) + vp.Phi_map_data.y),
                    rdir,
                    name))
             )

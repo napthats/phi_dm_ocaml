@@ -1,3 +1,5 @@
+open Phi_map.Open
+
 type t = 
     <get_name : string;
   get_status_view : Chara_status.view;
