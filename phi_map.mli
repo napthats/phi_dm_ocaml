@@ -66,6 +66,8 @@ type t =
   | Dead of Chara_id.t
   | Say of (Chara_id.t * string)
   | Switch_move of (Chara_id.t * position)
+  | Switch_list of (Chara_id.t * string list)
+  | Switch_select_done of (Chara_id.t * int * position)
 (*  | Status_view_change of (Chara_manager.chara_id * Phi_map.position
                       * (Chara_manager.chara_status_view * Chara_manager.chara_status_view))
   | Time_tick of int *)

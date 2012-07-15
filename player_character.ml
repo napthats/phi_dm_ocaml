@@ -1,7 +1,7 @@
 open Chara_status.Open
 open Phi_map.Open
 
-type list_select_type = Get | Use | Unequip | Spell
+type list_select_type = Get | Use | Unequip | Spell | Switch of string list
 
 type command_st = 
     Normal
@@ -30,6 +30,7 @@ type t =
   use_item : item:Item.t -> Event.t list;
   unequip_item : item:Item.t -> Event.t list;
   move : pos:Phi_map.position -> Event.t list;
+  select_list : list:string list -> Event.t list;
   cast : spell:Spell.t -> Event.t list;
 
   set_command_st : st:command_st -> unit;
@@ -67,6 +68,12 @@ let create ~phirc ~cid ~chid =
       Phi_map.set_chara_position ~chara_id:chid ~pos:next_pos;
       ignore (self#sight_update);
       [event]
+
+    method select_list ~list =
+      self#send_message (Dm_message.make (Dm_message.Switch_list list));
+      self#send_message (Dm_message.make Dm_message.Switch_select);
+      self#set_command_st ~st:(List_select (Switch list));
+      []
 
     method sight_change = function
         Chara.Appear_chara (_, _) ->

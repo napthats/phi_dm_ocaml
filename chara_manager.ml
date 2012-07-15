@@ -35,7 +35,13 @@ let execute_raw_client_protocol (cid, pc, protocol) =
                    (fun item -> pc#unequip_item ~item) (Dm_message.make Dm_message.Unequip_no)
                | Player_character.Spell ->
                  f pc#get_spell_list
-                   (fun spell -> pc#cast ~spell) (Dm_message.make Dm_message.Spell_no))
+                   (fun spell -> pc#cast ~spell) (Dm_message.make Dm_message.Spell_no)
+               | Player_character.Switch elem_list ->
+                 let pos = Phi_map.get_chara_position ~chara_id:pc#get_chara_id in
+                 f elem_list
+                   (fun _ -> [Event.Switch_select_done (pc#get_chara_id, (int_of_string msg), pos)])
+                   (Dm_message.make Dm_message.Switch_list_no)
+             )
           with
               Failure "int_of_string" ->
                 pc#set_command_st ~st:Player_character.Normal;
@@ -260,6 +266,15 @@ let execute_event = function
         None -> []
       | Some chara -> chara#move ~pos
     )    
+
+  | Event.Switch_select_done _ ->
+    []
+
+  | Event.Switch_list (chid, list) ->
+    (match Chara_data.get_chara chid with
+        None -> []
+      | Some chara -> chara#select_list ~list
+    )
 
   | Event.Tick ->
     List.concat (Chara_data.map (fun chara -> chara#do_action))

@@ -23,6 +23,7 @@ type t =
   use_item : item:Item.t -> Event.t list;
   unequip_item : item:Item.t -> Event.t list;
   move : pos:Phi_map.position -> Event.t list;
+  select_list : list:string list -> Event.t list;
   cast : spell:Spell.t -> Event.t list>
 
 let adirs = [|Phi_map_data.North; Phi_map_data.East; Phi_map_data.West; Phi_map_data.South|];;
@@ -46,6 +47,9 @@ let create ~chid =
     method cast ~spell:_ =
       print_endline "not inplemented: non_player_character cast";
       []      
+
+    method select_list ~list:_ =
+      []
 
     method move ~pos:next_pos = 
       let old_pos = Phi_map.get_chara_position ~chara_id:chid in

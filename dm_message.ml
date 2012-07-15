@@ -40,10 +40,14 @@ type msg_type =
   | Cast_stop
   | Eatfood of (string * string * int)
   | Spell_list of string list
+  | Switch_list of string list
+  | Switch_select
+  | Switch_list_no
 
 
 let make = function
     Go_no -> "DM > Can not go."
+  | Switch_list_no -> "DM > No such entry."
   | Turn_bad -> "DM > Which direction? Type 'turn ????'."
   | Attack_hp (aname, dname, weapon, value) ->
     "DM > " ^ aname ^ " attacked to " ^ dname ^ " by " ^ weapon
@@ -68,6 +72,7 @@ let make = function
   | Seeyou -> "  See you next time.  "
   | Get_select -> "DM > Input item number to get."
   | Use_select -> "DM > Input item number to use."
+  | Switch_select -> "DM > Input number to select."
   | Put_bad -> "DM > You do not have such a thing."
   | Use_bad -> "DM > You do not have such a thing."
   | No_item_investory -> "DM > you do not have any items."
@@ -96,6 +101,14 @@ let make = function
               (ord+1, acc ^ (Printf.sprintf "[%2d] %s" ord name) ^ "\n"))
             (1, "")
             name_list))
+  | Switch_list name_list ->
+    String.rchop 
+      (snd 
+         (List.fold_left
+            (fun (ord, acc) name ->
+              (ord+1, acc ^ (Printf.sprintf "[%2d] %s" ord name) ^ "\n"))
+            (1, "")
+            name_list))    
   | Item_list_with_equip name_list ->
     let equip_flag_to_string = function
         Some Chara.Wpn -> " [/*color=red*/Wpn/*.*/]"
