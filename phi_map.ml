@@ -58,7 +58,7 @@ end
 (* all length of arrays are same *)
 module Map_loader :
 sig
-  val load : unit -> mapchip array array
+  val load : unit -> (mapchip * (Chara_id.t list * Item.t list* Switch.t list)) array array
 end
 =
 struct
@@ -88,6 +88,7 @@ struct
     let file_chan = open_in "phi.dd" in
     let file = IO.input_channel file_chan in
     let data = IO.read_all file in
+    close_in file_chan;
     let get_odd_list list =
       fst (List.fold_left (fun (acc, cond) elem -> 
         if cond 
@@ -99,8 +100,8 @@ struct
     let char_list = List.map String.explode split_data in
     let char_list_odd = List.map get_odd_list char_list in
     let chip_list = List.map (List.map char_to_mapchip) char_list_odd in
-    close_in file_chan;
-    Array.of_list (List.map Array.of_list chip_list)
+    let chip_array = Array.of_list (List.map Array.of_list chip_list) in
+    Array.map (Array.map (fun chip -> (chip, ([], [], [])))) chip_array
 end
 
 
@@ -123,13 +124,13 @@ struct
       Item.create ~view:(
         {Item.name = "test item 1"; Item.attack_range = Item.Forth; Item.material = Item.Steel; Item.weapon_type = Item.Sword; Item.atp = 10; Item.item_type =Item.Weapon {Item.element = Item.Fire; Item.er = 30; Item.effect = Item.EFNone; Item.special_effect = Item.SENone}})
 
-  let switch_debug_move = ([], (Switch.Move {px=4;py=6}))
+  let switch_debug_move = ([], (Switch.Move {px=5;py=7}))
   let switch_debug_list = ([], (Switch.List_select ["test gate 1"; "test gate 2"; "re-select"]))
-  let switch_debug_select1 = ([Switch.List_select_done 1], (Switch.Move {px=5;py=5}))
-  let switch_debug_select2 = ([Switch.List_select_done 2], (Switch.Move {px=0;py=6}))
+  let switch_debug_select1 = ([Switch.List_select_done 1], (Switch.Move {px=6;py=6}))
+  let switch_debug_select2 = ([Switch.List_select_done 2], (Switch.Move {px=1;py=7}))
   let switch_debug_select3 = ([Switch.List_select_done 3], (Switch.List_select ["test gate 1"; "test gate 2"; "re-select"]))
     
-  let data = Array.map (Array.map (fun chip -> (chip, ([], [], [])))) (Map_loader.load ())
+  let data = Map_loader.load ()
 
   let get_chip_view pos = fst data.(pos.py).(pos.px)
   let set_chip_view pos chip_view = 
@@ -162,9 +163,9 @@ struct
 
   (* tentative: initialize mapdata *)
   let _ =
-    set_switch_list {px=0;py=0} [switch_debug_list; switch_debug_select1; switch_debug_select2; switch_debug_select3];
-    set_switch_list {px=2;py=6} [switch_debug_move];
-    set_item_list {px=3;py=4} [item_debug]
+    set_switch_list {px=1;py=1} [switch_debug_list; switch_debug_select1; switch_debug_select2; switch_debug_select3];
+    set_switch_list {px=3;py=7} [switch_debug_move];
+    set_item_list {px=4;py=5} [item_debug]
 end
 
 
@@ -173,7 +174,7 @@ let charaid_pos_tbl = Hashtbl.create 100
 let charaid_dir_tbl = Hashtbl.create 100
 
 
-let get_default_position = {px = 0; py = 0}
+let get_default_position = {px = 2; py = 1}
 
 let set_chara_position ~chara_id ~pos =
   (match Hashtbl.find_all charaid_pos_tbl chara_id with
