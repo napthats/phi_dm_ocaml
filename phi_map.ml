@@ -1,5 +1,6 @@
 open ExtHashtbl
 open ExtList
+open ExtString
 open Phi_map_data
 
 
@@ -54,20 +55,52 @@ struct
 end
 
 
+(* all length of arrays are same *)
 module Map_loader :
 sig
   val load : unit -> mapchip array array
 end
 =
 struct
+  let char_to_mapchip = function
+      ' ' -> Road
+    | 'o' -> Dummy
+    | ':' -> Grass
+    | '+' -> Flower
+    | '_' -> Water
+    | 'x' -> Pcircle
+    | '/' -> Mist
+    | '>' -> Tgate
+    | '[' -> Door
+    | 'I' -> Bars
+    | '%' -> Pcircle_lock
+    | '|' -> Window
+    | 'T' -> Wood
+    | '=' -> Glass
+    | 'H' -> Mwall
+    | '{' -> Door_lock
+    | '#' -> Mwall
+    | '@' -> Rock
+    | '?' -> Unknown      
+    | x -> failwith ("phi.dd: illigal mapchip " ^ (Char.escaped x))
+
   let load () =
-    [|[|Tgate; Road; Flower; Bars; Grass; Mist; Mwall|];
-      [|Bars; Road; Flower; Door; Grass; Mist; Mwall|];
-      [|Bars; Road; Flower; Bars; Grass; Mist; Mwall|];
-      [|Bars; Road; Rock; Road; Grass; Mist; Mwall|];
-      [|Bars; Road; Rock; Pcircle; Rock; Mist; Mwall|];
-      [|Bars; Road; Rock; Rock; Rock; Mist; Mwall|];
-      [|Bars; Road; Dummy; Glass; Grass; Mist; Mwall|];|]
+    let file_chan = open_in "phi.dd" in
+    let file = IO.input_channel file_chan in
+    let data = IO.read_all file in
+    let get_odd_list list =
+      fst (List.fold_left (fun (acc, cond) elem -> 
+        if cond 
+        then (List.append acc [elem], not cond) 
+        else (acc, not cond)
+      ) ([], true) list)
+    in
+    let split_data = String.nsplit data "\n" in
+    let char_list = List.map String.explode split_data in
+    let char_list_odd = List.map get_odd_list char_list in
+    let chip_list = List.map (List.map char_to_mapchip) char_list_odd in
+    close_in file_chan;
+    Array.of_list (List.map Array.of_list chip_list)
 end
 
 
@@ -98,16 +131,6 @@ struct
     
   let data = Array.map (Array.map (fun chip -> (chip, ([], [], [])))) (Map_loader.load ())
 
-(*
-    ([|[|(Tgate, ([], [], [switch_debug_list; switch_debug_select1; switch_debug_select2; switch_debug_select3])); (Road, ([], [item_debug], [])); (Flower, ([], [], [])); (Bars, ([], [], [])); (Grass, ([], [], [])); (Mist, ([], [], [])); (Mwall, ([], [], []))|];
-       [|(Bars, ([], [], [])); (Road, ([], [], [switch_debug_move])); (Flower, ([], [], [])); (Door, ([], [], [])); (Grass, ([], [], [])); (Mist, ([], [], [])); (Mwall, ([], [], []))|];
-       [|(Bars, ([], [], [])); (Road, ([], [], [])); (Flower, ([], [], [])); (Bars, ([], [], [])); (Grass, ([], [], [])); (Mist, ([], [], [])); (Mwall, ([], [], []))|];
-       [|(Bars, ([], [], [])); (Road, ([], [], [])); (Rock, ([], [], [])); (Road, ([], [], [])); (Grass, ([], [], [])); (Mist, ([], [], [])); (Mwall, ([], [], []))|];
-       [|(Bars, ([], [], [])); (Road, ([], [], [])); (Rock, ([], [], [])); (Road, ([], [], [])); (Rock, ([], [], [])); (Mist, ([], [], [])); (Mwall, ([], [], []))|];
-       [|(Bars, ([], [], [])); (Road, ([], [], [])); (Rock, ([], [], [])); (Rock, ([], [], [])); (Rock, ([], [], [])); (Mist, ([], [], [])); (Mwall, ([], [], []))|];
-       [|(Bars, ([], [], [])); (Road, ([], [], [])); (Flower, ([], [], [])); (Glass, ([], [], [])); (Grass, ([], [], [])); (Mist, ([], [], [])); (Mwall, ([], [], []))|];|])
-*)
-  
   let get_chip_view pos = fst data.(pos.py).(pos.px)
   let set_chip_view pos chip_view = 
     let (_, lists) = data.(pos.py).(pos.px) in
@@ -134,12 +157,8 @@ struct
     let (cv, (chara_list, item_list, _)) = data.(pos.py).(pos.px) in
     data.(pos.py).(pos.px) <- (cv, (chara_list, item_list, switch_list))
 
-  let data_width = 7
-
-  let data_height = 7
-
   let is_valid_pos pos =
-    pos.px >= 0 && pos.px < data_width && pos.py >= 0 && pos.py < data_height
+    pos.px >= 0 && pos.px < Array.length data.(0) && pos.py >= 0 && pos.py < Array.length data
 
   (* tentative: initialize mapdata *)
   let _ =
@@ -149,12 +168,12 @@ struct
 end
 
 
-let charaid_pos_tbl = Hashtbl.create 100;;
+let charaid_pos_tbl = Hashtbl.create 100
 
-let charaid_dir_tbl = Hashtbl.create 100;;
+let charaid_dir_tbl = Hashtbl.create 100
 
 
-let get_default_position = {px = 0; py = 0};;
+let get_default_position = {px = 0; py = 0}
 
 let set_chara_position ~chara_id ~pos =
   (match Hashtbl.find_all charaid_pos_tbl chara_id with
